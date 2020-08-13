@@ -82,6 +82,7 @@ func getServer(serverID string) ServerModel {
 	obj := ServerModel{}
 	rows.Next()
 	rows.Scan(&obj.ID, &obj.Name, &obj.ServerType, &obj.IPAddress, &obj.City, &obj.ControlPort, &obj.UserID, &obj.CreatedAt, &obj.UpdatedAt, &obj.Os, &obj.Enabled, &obj.KeyPort)
+	rows.Close()
 	return obj
 }
 
@@ -90,19 +91,21 @@ func getExtension(extensionID string) ExtensionModel {
 	obj := ExtensionModel{}
 	rows.Next()
 	rows.Scan(&obj.ID, &obj.Name, &obj.Version, &obj.Icon, &obj.Service, &obj.CreatedAt, &obj.UpdatedAt, &obj.Order, &obj.SslPorts, &obj.Issuer, &obj.Language, &obj.Support, &obj.Displays, &obj.Status)
+	rows.Close()
 	return obj
 }
 
-func getSettings(userID string, serverID string) []SettingsModel {
+func getSettings(userID string, serverID string) map[string]string {
 	rows, _ := db.Query("SELECT * FROM user_settings WHERE (user_id='" + userID + "' AND server_id='" + serverID + "' )")
-	results := []SettingsModel{}
+	results := make(map[string]string)
 	decryptionKey := helpers.AppKey + userID + serverID
 	for rows.Next() {
 		obj := SettingsModel{}
 		rows.Scan(&obj.ID, &obj.ServerID, &obj.UserID, &obj.Name, &obj.Value, &obj.CreatedAt, &obj.UpdatedAt)
 		obj.Value = aes256.Decrypt(obj.Value, decryptionKey)
-		results = append(results, obj)
+		results[obj.Name] = obj.Value
 	}
+	rows.Close()
 	return results
 }
 
@@ -114,6 +117,7 @@ func getToken(token string) (TokenModel, error) {
 	obj := TokenModel{}
 	rows.Next()
 	rows.Scan(&obj.ID, &obj.UserID, &obj.Token, &obj.CreatedAt, &obj.UpdatedAt)
+	rows.Close()
 	return obj, nil
 }
 
@@ -123,6 +127,7 @@ func GetUser(userID string) UserModel {
 	obj := UserModel{}
 	rows.Next()
 	rows.Scan(&obj.ID, &obj.Name, &obj.Email, &obj.Password, &obj.Status, &obj.LastLoginAt, &obj.RememberToken, &obj.LastLoginIP, &obj.CreatedAt, &obj.UpdatedAt, &obj.ForceChange, &obj.ObjectGUID, &obj.AuthType)
+	rows.Close()
 	obj.Password = ""
 	obj.RememberToken = ""
 	obj.ObjectGUID = ""

@@ -11,7 +11,7 @@ import (
 var db *sql.DB
 
 // GetUserData opens the database
-func GetUserData(serverID string, extensionID string, userID string) (ServerModel, ExtensionModel, []SettingsModel) {
+func GetUserData(serverID string, extensionID string, userID string) (ServerModel, ExtensionModel, map[string]string) {
 	return getServer(serverID), getExtension(extensionID), getSettings(userID, serverID)
 }
 
@@ -26,7 +26,7 @@ func GetUserIDFromToken(tokenID string) string {
 
 // InitDB inialize database
 func InitDB() {
-	temp, err := sql.Open("sqlite3", "/liman/database/liman.sqlite")
+	temp, err := sql.Open("sqlite3", "/liman/database/liman.sqlite?cache=shared&mode=rwc")
 	if err != nil {
 		helpers.Abort(err.Error())
 	}

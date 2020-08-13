@@ -9,13 +9,13 @@ import (
 )
 
 var (
-	port     = 5454
 	certPath = "/liman/certs/liman.crt"
 	keyPath  = "/liman/certs/liman.key"
 )
 
 // CreateWebServer Create Web Server
 func CreateWebServer() {
+	port := 5454
 	log.Printf("Starting Server on %d\n", port)
 
 	r := mux.NewRouter()
