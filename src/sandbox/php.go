@@ -38,9 +38,9 @@ func GeneratePHPCommand(targetFunction string, userID string, extensionID string
 	b, _ = json.Marshal(requestData)
 	result["requestData"] = string(b)
 
-	result["apiRoute"] = "https://liman.mcelen.dev/extensionRun"
+	result["apiRoute"] = "/extensionRun"
 
-	result["navigationRoute"] = result["apiRoute"]
+	result["navigationRoute"] = "/l/" + extension.ID + "/" + server.City + "/" + server.ID
 
 	result["token"] = token
 
