@@ -24,6 +24,15 @@ func GetUserIDFromToken(tokenID string) string {
 	return token.UserID
 }
 
+// GetUserIDFromLimanToken Find token from liman token (personal access key)
+func GetUserIDFromLimanToken(tokenID string) string {
+	token, err := getAccessToken(tokenID)
+	if err != nil {
+		return ""
+	}
+	return token.UserID
+}
+
 // InitDB inialize database
 func InitDB() {
 	temp, err := sql.Open("sqlite3", "/liman/database/liman.sqlite?cache=shared&mode=rwc")

@@ -46,11 +46,7 @@ func GeneratePHPCommand(targetFunction string, userID string, extensionID string
 
 	result["locale"] = "tr"
 
-	if isAJAX == true {
-		result["ajax"] = "true"
-	} else {
-		result["ajax"] = "false"
-	}
+	result["ajax"] = "true"
 
 	soPath := "/liman/extensions/" + strings.ToLower(extension.Name) + "/liman.so"
 	soCommand := ""
