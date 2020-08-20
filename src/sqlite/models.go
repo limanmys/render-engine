@@ -1,11 +1,5 @@
 package sqlite
 
-import (
-	"renderer/src/helpers"
-
-	"github.com/mervick/aes-everywhere/go/aes256"
-)
-
 // ServerModel Structure of the server obj
 type ServerModel struct {
 	ID          string `json:"id"`
@@ -114,94 +108,26 @@ type Widget struct {
 	Order       int    `json:"order"`
 }
 
-// GetWidget Get the id of the widget
-func GetWidget(widgetID string) Widget {
-	rows, _ := db.Query("SELECT * FROM widgets WHERE id=? LIMIT 1", widgetID)
-	obj := Widget{}
-	rows.Next()
-	rows.Scan(&obj.ID, &obj.Name, &obj.Title, &obj.UserID, &obj.Type, &obj.ExtensionID, &obj.ServerID, &obj.Function, &obj.Text, &obj.CreatedAt, &obj.UpdatedAt, &obj.Order)
-	rows.Close()
-	return obj
+// Permission Structure of the permissions
+type Permission struct {
+	ID        string `json:"id"`
+	CreatedAt string `json:"created_at"`
+	UpdatedAt string `json:"updated_at"`
+	Type      string `json:"type"`
+	Key       string `json:"key"`
+	Value     string `json:"value"`
+	Extra     string `json:"extra"`
+	Blame     string `json:"blame"`
+	MorphID   string `json:"morph_id"`
+	MorphType string `json:"morph_type"`
 }
 
-func getServer(serverID string) ServerModel {
-	rows, _ := db.Query("SELECT * FROM servers WHERE id=? LIMIT 1", serverID)
-	obj := ServerModel{}
-	rows.Next()
-	rows.Scan(&obj.ID, &obj.Name, &obj.ServerType, &obj.IPAddress, &obj.City, &obj.ControlPort, &obj.UserID, &obj.CreatedAt, &obj.UpdatedAt, &obj.Os, &obj.Enabled, &obj.KeyPort)
-	rows.Close()
-	return obj
-}
-
-func getExtension(extensionID string) ExtensionModel {
-	rows, _ := db.Query("SELECT * FROM extensions WHERE id=? LIMIT 1", extensionID)
-	obj := ExtensionModel{}
-	rows.Next()
-	rows.Scan(&obj.ID, &obj.Name, &obj.Version, &obj.Icon, &obj.Service, &obj.CreatedAt, &obj.UpdatedAt, &obj.Order, &obj.SslPorts, &obj.Issuer, &obj.Language, &obj.Support, &obj.Displays, &obj.Status)
-	rows.Close()
-	return obj
-}
-
-func getSettings(userID string, serverID string) map[string]string {
-	rows, _ := db.Query("SELECT * FROM user_settings WHERE (user_id=? AND server_id=? )", userID, serverID)
-	results := make(map[string]string)
-	decryptionKey := helpers.AppKey + userID + serverID
-	for rows.Next() {
-		obj := SettingsModel{}
-		rows.Scan(&obj.ID, &obj.ServerID, &obj.UserID, &obj.Name, &obj.Value, &obj.CreatedAt, &obj.UpdatedAt)
-		obj.Value = aes256.Decrypt(obj.Value, decryptionKey)
-		results[obj.Name] = obj.Value
-	}
-	rows.Close()
-	return results
-}
-
-func getToken(token string) (TokenModel, error) {
-	rows, err := db.Query("SELECT * FROM tokens WHERE token=? LIMIT 1", token)
-	if err != nil {
-		return TokenModel{}, err
-	}
-	obj := TokenModel{}
-	rows.Next()
-	rows.Scan(&obj.ID, &obj.UserID, &obj.Token, &obj.CreatedAt, &obj.UpdatedAt)
-	rows.Close()
-	return obj, nil
-}
-
-func getAccessToken(token string) (AccessToken, error) {
-	rows, err := db.Query("SELECT * FROM access_tokens WHERE token=? LIMIT 1", token)
-	if err != nil {
-		return AccessToken{}, err
-	}
-	obj := AccessToken{}
-	rows.Next()
-	rows.Scan(&obj.ID, &obj.Name, &obj.UserID, &obj.LastUsedAt, &obj.LastUsedIP, &obj.Token, &obj.CreatedAt, &obj.UpdatedAt)
-	rows.Close()
-	return obj, nil
-}
-
-// GetLicense Structure of the license object
-func GetLicense(extensionID string) (License, error) {
-	rows, err := db.Query("SELECT * FROM licenses WHERE extension_id=? LIMIT 1", extensionID)
-	if err != nil {
-		return License{}, err
-	}
-	obj := License{}
-	rows.Next()
-	rows.Scan(&obj.ID, &obj.Data, &obj.ExtensionID, &obj.CreatedAt, &obj.UpdatedAt)
-	rows.Close()
-	return obj, nil
-}
-
-// GetUser Retrieve user data from id
-func GetUser(userID string) UserModel {
-	rows, _ := db.Query("SELECT * FROM users WHERE id=? LIMIT 1", userID)
-	obj := UserModel{}
-	rows.Next()
-	rows.Scan(&obj.ID, &obj.Name, &obj.Email, &obj.Password, &obj.Status, &obj.LastLoginAt, &obj.RememberToken, &obj.LastLoginIP, &obj.CreatedAt, &obj.UpdatedAt, &obj.ForceChange, &obj.ObjectGUID, &obj.AuthType)
-	rows.Close()
-	obj.Password = ""
-	obj.RememberToken = ""
-	obj.ObjectGUID = ""
-	return obj
+// RoleUsers Structure of the role users
+type RoleUsers struct {
+	ID        string `json:"id"`
+	UserID    string `json:"user_id"`
+	RoleID    string `json:"role_id"`
+	CreatedAt string `json:"created_at"`
+	UpdatedAt string `json:"updated_at"`
+	Type      string `json:"type"`
 }

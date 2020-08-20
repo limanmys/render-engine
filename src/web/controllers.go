@@ -64,7 +64,9 @@ func runExtensionHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	command := sandbox.GeneratePHPCommand(target, userID, extensionID, serverID, requestData, token, false)
+	baseURL := r.FormValue("lmnbaseurl")
+
+	command := sandbox.GeneratePHPCommand(target, userID, extensionID, serverID, requestData, token, baseURL)
 	output := executeCommand(command)
 	var objmap map[string]json.RawMessage
 	err := json.Unmarshal([]byte(output), &objmap)

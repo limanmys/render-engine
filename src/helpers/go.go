@@ -53,3 +53,16 @@ func Contains(arr []string, str string) bool {
 	}
 	return false
 }
+
+// UniqueStrings make string array unique
+func UniqueStrings(arr []string) []string {
+	occured := map[string]bool{}
+	result := []string{}
+	for e := range arr {
+		if occured[arr[e]] != true {
+			occured[arr[e]] = true
+			result = append(result, arr[e])
+		}
+	}
+	return result
+}

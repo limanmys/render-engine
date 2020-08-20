@@ -11,7 +11,7 @@ import (
 )
 
 // GeneratePHPCommand generate command
-func GeneratePHPCommand(targetFunction string, userID string, extensionID string, serverID string, requestData map[string]string, token string, isAJAX bool) string {
+func GeneratePHPCommand(targetFunction string, userID string, extensionID string, serverID string, requestData map[string]string, token string, baseURL string) string {
 	result := make(map[string]string)
 	combinerPath := "/liman/sandbox/php/index.php"
 	server, extension, settings := sqlite.GetUserData(serverID, extensionID, userID)
@@ -51,6 +51,11 @@ func GeneratePHPCommand(targetFunction string, userID string, extensionID string
 	result["locale"] = "tr"
 
 	result["ajax"] = "true"
+
+	result["publicPath"] = baseURL + "/eklenti/" + extension.ID + "/public/"
+
+	b, _ = json.Marshal(sqlite.GetPermissions(userID))
+	result["permissions"] = string(b)
 
 	soPath := "/liman/extensions/" + strings.ToLower(extension.Name) + "/liman.so"
 	soCommand := ""
