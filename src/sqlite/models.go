@@ -89,6 +89,15 @@ type AccessToken struct {
 	UpdatedAt  string `json:"updated_at"`
 }
 
+// License Structure of the personal extension license
+type License struct {
+	ID          string `json:"id"`
+	Data        string `json:"data"`
+	ExtensionID string `json:"extension_id"`
+	CreatedAt   string `json:"created_at"`
+	UpdatedAt   string `json:"updated_at"`
+}
+
 func getServer(serverID string) ServerModel {
 	rows, _ := db.Query("SELECT * FROM servers WHERE id=? LIMIT 1", serverID)
 	obj := ServerModel{}
@@ -141,6 +150,19 @@ func getAccessToken(token string) (AccessToken, error) {
 	obj := AccessToken{}
 	rows.Next()
 	rows.Scan(&obj.ID, &obj.Name, &obj.UserID, &obj.LastUsedAt, &obj.LastUsedIP, &obj.Token, &obj.CreatedAt, &obj.UpdatedAt)
+	rows.Close()
+	return obj, nil
+}
+
+// GetLicense Structure of the license object
+func GetLicense(extensionID string) (License, error) {
+	rows, err := db.Query("SELECT * FROM licenses WHERE extension_id=? LIMIT 1", extensionID)
+	if err != nil {
+		return License{}, err
+	}
+	obj := License{}
+	rows.Next()
+	rows.Scan(&obj.ID, &obj.Data, &obj.ExtensionID, &obj.CreatedAt, &obj.UpdatedAt)
 	rows.Close()
 	return obj, nil
 }

@@ -38,6 +38,10 @@ func GeneratePHPCommand(targetFunction string, userID string, extensionID string
 	b, _ = json.Marshal(requestData)
 	result["requestData"] = string(b)
 
+	license, _ := sqlite.GetLicense(extension.ID)
+
+	result["license"] = license.Data
+
 	result["apiRoute"] = "/extensionRun"
 
 	result["navigationRoute"] = "/l/" + extension.ID + "/" + server.City + "/" + server.ID
