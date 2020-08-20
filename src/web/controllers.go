@@ -39,9 +39,30 @@ func runExtensionHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	target := r.FormValue("target")
-	serverID := r.FormValue("server_id")
-	extensionID := r.FormValue("extension_id")
+	var target string
+	var serverID string
+	var extensionID string
+
+	if r.FormValue("widget_id") != "" {
+		widget := sqlite.GetWidget(r.FormValue("widget_id"))
+		if widget.Name == "" {
+			w.WriteHeader(403)
+			_, _ = w.Write([]byte("Widget bulunamadı"))
+		}
+		target = widget.Function
+		serverID = widget.ServerID
+		extensionID = widget.ExtensionID
+	} else {
+		target = r.FormValue("target")
+		serverID = r.FormValue("server_id")
+		extensionID = r.FormValue("extension_id")
+	}
+
+	if target == "" || serverID == "" || extensionID == "" {
+		w.WriteHeader(403)
+		_, _ = w.Write([]byte("nope"))
+		return
+	}
 
 	command := sandbox.GeneratePHPCommand(target, userID, extensionID, serverID, requestData, token, false)
 	output := executeCommand(command)

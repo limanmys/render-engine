@@ -98,6 +98,32 @@ type License struct {
 	UpdatedAt   string `json:"updated_at"`
 }
 
+// Widget Structure of the widget
+type Widget struct {
+	ID          string `json:"id"`
+	Name        string `json:"name"`
+	Title       string `json:"title"`
+	UserID      string `json:"user_id"`
+	Type        string `json:"type"`
+	ExtensionID string `json:"extension_id"`
+	ServerID    string `json:"serrver_id"`
+	Function    string `json:"function"`
+	Text        string `json:"text"`
+	CreatedAt   string `json:"created_at"`
+	UpdatedAt   string `json:"updated_at"`
+	Order       int    `json:"order"`
+}
+
+// GetWidget Get the id of the widget
+func GetWidget(widgetID string) Widget {
+	rows, _ := db.Query("SELECT * FROM widgets WHERE id=? LIMIT 1", widgetID)
+	obj := Widget{}
+	rows.Next()
+	rows.Scan(&obj.ID, &obj.Name, &obj.Title, &obj.UserID, &obj.Type, &obj.ExtensionID, &obj.ServerID, &obj.Function, &obj.Text, &obj.CreatedAt, &obj.UpdatedAt, &obj.Order)
+	rows.Close()
+	return obj
+}
+
 func getServer(serverID string) ServerModel {
 	rows, _ := db.Query("SELECT * FROM servers WHERE id=? LIMIT 1", serverID)
 	obj := ServerModel{}
