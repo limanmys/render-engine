@@ -53,7 +53,7 @@ func runExtensionHandler(w http.ResponseWriter, r *http.Request) {
 		serverID = widget.ServerID
 		extensionID = widget.ExtensionID
 	} else {
-		target = r.FormValue("target")
+		target = r.FormValue("lmntargetFunction")
 		serverID = r.FormValue("server_id")
 		extensionID = r.FormValue("extension_id")
 	}
