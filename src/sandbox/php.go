@@ -11,7 +11,7 @@ import (
 )
 
 // GeneratePHPCommand generate command
-func GeneratePHPCommand(targetFunction string, userID string, extensionID string, serverID string, requestData map[string]string, token string, baseURL string) string {
+func GeneratePHPCommand(targetFunction string, userID string, extensionID string, serverID string, requestData map[string]string, token string, baseURL string, locale string) string {
 	result := make(map[string]string)
 	combinerPath := "/liman/sandbox/php/index.php"
 	server, extension, settings := sqlite.GetUserData(serverID, extensionID, userID)
@@ -48,7 +48,7 @@ func GeneratePHPCommand(targetFunction string, userID string, extensionID string
 
 	result["token"] = token
 
-	result["locale"] = "tr"
+	result["locale"] = locale
 
 	result["ajax"] = "true"
 

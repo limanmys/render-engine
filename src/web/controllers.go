@@ -65,8 +65,12 @@ func runExtensionHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	baseURL := r.FormValue("lmnbaseurl")
+	locale := r.FormValue("locale")
+	if locale == "" {
+		locale = "tr"
+	}
 
-	command := sandbox.GeneratePHPCommand(target, userID, extensionID, serverID, requestData, token, baseURL)
+	command := sandbox.GeneratePHPCommand(target, userID, extensionID, serverID, requestData, token, baseURL, locale)
 	output := executeCommand(command)
 	var objmap map[string]json.RawMessage
 	err := json.Unmarshal([]byte(output), &objmap)
