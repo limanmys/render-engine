@@ -87,7 +87,7 @@ func runExtensionHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", contentType)
 	w.WriteHeader(status)
-	_, _ = w.Write([]byte(output))
+	_, _ = w.Write([]byte(output + "\n"))
 }
 
 func executeCommand(input string) string {
