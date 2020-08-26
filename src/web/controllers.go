@@ -2,14 +2,14 @@ package web
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
-	"os"
 	"os/exec"
 	"renderer/src/sandbox"
 	"renderer/src/sqlite"
 	"strconv"
 	"strings"
+
+	"github.com/google/uuid"
 )
 
 type message struct {
@@ -72,7 +72,20 @@ func runExtensionHandler(w http.ResponseWriter, r *http.Request) {
 		locale = "tr"
 	}
 
-	command := sandbox.GeneratePHPCommand(target, userID, extensionID, serverID, requestData, token, baseURL, locale)
+	logObject := sandbox.RegularLog{
+		UserID:      userID,
+		ExtensionID: extensionID,
+		ServerID:    serverID,
+		IPAddress:   r.Header.Get("X-Real-IP"),
+		Display:     "true",
+		View:        target,
+		LogID:       uuid.New().String(),
+	}
+
+	command := sandbox.GeneratePHPCommand(target, userID, extensionID, serverID, requestData, token, baseURL, locale, logObject)
+
+	sandbox.WriteRegularLog(logObject)
+
 	output := executeCommand(command)
 	var objmap map[string]json.RawMessage
 	err := json.Unmarshal([]byte(output), &objmap)
@@ -92,17 +105,37 @@ func runExtensionHandler(w http.ResponseWriter, r *http.Request) {
 	_, _ = w.Write([]byte(output + "\n"))
 }
 
+func extensionLogHandler(w http.ResponseWriter, r *http.Request) {
+	token := r.FormValue("token")
+	requestData := map[string]string{}
+	for key, values := range r.PostForm {
+		requestData[key] = values[0]
+	}
+	var userID string
+
+	userID = sqlite.GetUserIDFromToken(token)
+	if userID == "" {
+		w.WriteHeader(403)
+		_, _ = w.Write([]byte("nope2"))
+		return
+	}
+
+	specialLog := sandbox.SpecialLog{
+		UserID:  userID,
+		Message: r.FormValue("message"),
+		Title:   r.FormValue("title"),
+		LogID:   r.FormValue("log_id"),
+	}
+
+	sandbox.WriteSpecialLog(specialLog)
+
+	w.Header().Set("Content-Type", "text/plain")
+	w.WriteHeader(200)
+	_, _ = w.Write([]byte("ok"))
+}
+
 func executeCommand(input string) string {
 	cmd := exec.Command("/bin/bash", "-c", input)
 	stdout, _ := cmd.Output()
 	return string(stdout)
-}
-
-func logOutputToFile(output string) {
-	f, err := os.Create("test.txt")
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	f.WriteString("Hello World")
 }

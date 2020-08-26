@@ -20,6 +20,7 @@ func CreateWebServer() {
 
 	r := mux.NewRouter()
 	r.HandleFunc("/", runExtensionHandler)
+	r.HandleFunc("/sendLog", extensionLogHandler)
 	r.Use(loggingMiddleware)
 	log.Fatal(http.ListenAndServe("127.0.0.1:"+strconv.Itoa(port), r))
 }
