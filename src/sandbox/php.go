@@ -70,7 +70,7 @@ func GeneratePHPCommand(targetFunction string, userID string, extensionID string
 
 	encryptedData := aes256.Encrypt(string(b), string(content))
 
-	command := "sudo runuser " + strings.Replace(extension.ID, "-", "", -1) + " -c 'timeout 30 /usr/bin/php " + soCommand + "-d display_errors=on " + combinerPath + " " + keyPath + " " + encryptedData + "'"
+	command := "sudo runuser " + strings.Replace(extension.ID, "-", "", -1) + " -c 'timeout 30 /usr/bin/php " + soCommand + "-d display_errors=on " + combinerPath + " " + keyPath + " " + encryptedData + " 2&1'"
 
 	return command
 }

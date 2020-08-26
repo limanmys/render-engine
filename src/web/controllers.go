@@ -2,7 +2,9 @@ package web
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
+	"os"
 	"os/exec"
 	"renderer/src/sandbox"
 	"renderer/src/sqlite"
@@ -27,14 +29,14 @@ func runExtensionHandler(w http.ResponseWriter, r *http.Request) {
 		userID = sqlite.GetUserIDFromLimanToken(r.Header.Get("liman-token"))
 		if userID == "" {
 			w.WriteHeader(403)
-			_, _ = w.Write([]byte("nope"))
+			_, _ = w.Write([]byte("nope1"))
 			return
 		}
 	} else {
 		userID = sqlite.GetUserIDFromToken(token)
 		if userID == "" {
 			w.WriteHeader(403)
-			_, _ = w.Write([]byte("nope"))
+			_, _ = w.Write([]byte("nope2"))
 			return
 		}
 	}
@@ -60,7 +62,7 @@ func runExtensionHandler(w http.ResponseWriter, r *http.Request) {
 
 	if target == "" || serverID == "" || extensionID == "" {
 		w.WriteHeader(403)
-		_, _ = w.Write([]byte("nope"))
+		_, _ = w.Write([]byte("nope3"))
 		return
 	}
 
@@ -92,9 +94,15 @@ func runExtensionHandler(w http.ResponseWriter, r *http.Request) {
 
 func executeCommand(input string) string {
 	cmd := exec.Command("/bin/bash", "-c", input)
-	stdout, stderr := cmd.Output()
-	if stderr != nil {
-		return stderr.Error()
-	}
+	stdout, _ := cmd.Output()
 	return string(stdout)
+}
+
+func logOutputToFile(output string) {
+	f, err := os.Create("test.txt")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	f.WriteString("Hello World")
 }
