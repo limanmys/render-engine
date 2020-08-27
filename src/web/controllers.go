@@ -2,6 +2,7 @@ package web
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"os/exec"
 	"renderer/src/sandbox"
@@ -17,7 +18,19 @@ type message struct {
 	Status  int
 }
 
-func runExtensionHandler(w http.ResponseWriter, r *http.Request) {
+type parsedRequest struct {
+	Target      string
+	UserID      string
+	ExtensionID string
+	ServerID    string
+	RequestData map[string]string
+	Token       string
+	BaseURL     string
+	Locale      string
+	LogObject   sandbox.RegularLog
+}
+
+func validateAndExtractRequest(r *http.Request) (parsedRequest, error) {
 	token := r.FormValue("token")
 	requestData := map[string]string{}
 	for key, values := range r.PostForm {
@@ -28,16 +41,12 @@ func runExtensionHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Header.Get("liman-token") != "" {
 		userID = sqlite.GetUserIDFromLimanToken(r.Header.Get("liman-token"))
 		if userID == "" {
-			w.WriteHeader(403)
-			_, _ = w.Write([]byte("nope1"))
-			return
+			return parsedRequest{}, errors.New("Not Authorized1")
 		}
 	} else {
 		userID = sqlite.GetUserIDFromToken(token)
 		if userID == "" {
-			w.WriteHeader(403)
-			_, _ = w.Write([]byte("nope2"))
-			return
+			return parsedRequest{}, errors.New("Not Authorized2")
 		}
 	}
 
@@ -48,8 +57,7 @@ func runExtensionHandler(w http.ResponseWriter, r *http.Request) {
 	if r.FormValue("widget_id") != "" {
 		widget := sqlite.GetWidget(r.FormValue("widget_id"))
 		if widget.Name == "" {
-			w.WriteHeader(403)
-			_, _ = w.Write([]byte("Widget bulunamadı"))
+			return parsedRequest{}, errors.New("Widget Bulunamadı")
 		}
 		target = widget.Function
 		serverID = widget.ServerID
@@ -61,9 +69,7 @@ func runExtensionHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if target == "" || serverID == "" || extensionID == "" {
-		w.WriteHeader(403)
-		_, _ = w.Write([]byte("nope3"))
-		return
+		return parsedRequest{}, errors.New("Not Authorized3")
 	}
 
 	baseURL := r.FormValue("lmnbaseurl")
@@ -82,13 +88,36 @@ func runExtensionHandler(w http.ResponseWriter, r *http.Request) {
 		LogID:       uuid.New().String(),
 	}
 
-	command := sandbox.GeneratePHPCommand(target, userID, extensionID, serverID, requestData, token, baseURL, locale, logObject)
+	parsedRequest := parsedRequest{
+		Target:      target,
+		UserID:      userID,
+		ExtensionID: extensionID,
+		ServerID:    serverID,
+		RequestData: requestData,
+		Token:       token,
+		BaseURL:     baseURL,
+		Locale:      locale,
+		LogObject:   logObject,
+	}
 
-	sandbox.WriteRegularLog(logObject)
+	return parsedRequest, nil
+}
+
+func runExtensionHandler(w http.ResponseWriter, r *http.Request) {
+	parsedRequest, err := validateAndExtractRequest(r)
+	if err != nil {
+		w.WriteHeader(403)
+		_, _ = w.Write([]byte(err.Error()))
+		return
+	}
+
+	command := sandbox.GeneratePHPCommand(parsedRequest.Target, parsedRequest.UserID, parsedRequest.ExtensionID, parsedRequest.ServerID, parsedRequest.RequestData, parsedRequest.Token, parsedRequest.BaseURL, parsedRequest.Locale, parsedRequest.LogObject)
+
+	sandbox.WriteRegularLog(parsedRequest.LogObject)
 
 	output := executeCommand(command)
 	var objmap map[string]json.RawMessage
-	err := json.Unmarshal([]byte(output), &objmap)
+	err = json.Unmarshal([]byte(output), &objmap)
 	contentType := "text/plain"
 	var status int
 	if err != nil {
@@ -103,6 +132,24 @@ func runExtensionHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", contentType)
 	w.WriteHeader(status)
 	_, _ = w.Write([]byte(output + "\n"))
+}
+
+func backgroundJobHandler(w http.ResponseWriter, r *http.Request) {
+	parsedRequest, err := validateAndExtractRequest(r)
+	if err != nil {
+		w.WriteHeader(403)
+		_, _ = w.Write([]byte(err.Error()))
+		return
+	}
+	parsedRequest.LogObject.Display = "false"
+	command := sandbox.GeneratePHPCommand(parsedRequest.Target, parsedRequest.UserID, parsedRequest.ExtensionID, parsedRequest.ServerID, parsedRequest.RequestData, parsedRequest.Token, parsedRequest.BaseURL, parsedRequest.Locale, parsedRequest.LogObject)
+	sandbox.WriteRegularLog(parsedRequest.LogObject)
+
+	go executeCommand(command)
+
+	w.Header().Set("Content-Type", "text/plain")
+	w.WriteHeader(200)
+	_, _ = w.Write([]byte("ok\n"))
 }
 
 func extensionLogHandler(w http.ResponseWriter, r *http.Request) {
