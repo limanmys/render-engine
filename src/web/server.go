@@ -71,7 +71,10 @@ func permissionsMiddleware(next http.Handler) http.Handler {
 
 		if r.FormValue("extension_id") != "" {
 			extensionID = r.FormValue("extension_id")
-			if !helpers.Contains(permissions, extensionID) {
+			if helpers.IsValidUUID(extensionID) == false {
+				extensionID = sqlite.GetExtensionFromName(extensionID).ID
+			}
+			if !helpers.Contains(permissions, extensionID) || extensionID == "" {
 				w.WriteHeader(403)
 				_, _ = w.Write([]byte("nope7"))
 				return

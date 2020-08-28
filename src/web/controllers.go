@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 	"os/exec"
+	"renderer/src/helpers"
 	"renderer/src/sandbox"
 	"renderer/src/sqlite"
 	"strconv"
@@ -67,7 +68,9 @@ func validateAndExtractRequest(r *http.Request) (parsedRequest, error) {
 		serverID = r.FormValue("server_id")
 		extensionID = r.FormValue("extension_id")
 	}
-
+	if helpers.IsValidUUID(extensionID) == false {
+		extensionID = sqlite.GetExtensionFromName(extensionID).ID
+	}
 	if target == "" || serverID == "" || extensionID == "" {
 		return parsedRequest{}, errors.New("Not Authorized3")
 	}

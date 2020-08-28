@@ -34,6 +34,16 @@ func getExtension(extensionID string) ExtensionModel {
 	return obj
 }
 
+// GetExtensionFromName try to find extension id from it's name
+func GetExtensionFromName(extensionName string) ExtensionModel {
+	rows, _ := db.Query("SELECT * FROM extensions WHERE UPPER(NAME) LIKE UPPER(?) LIMIT 1", extensionName)
+	obj := ExtensionModel{}
+	rows.Next()
+	rows.Scan(&obj.ID, &obj.Name, &obj.Version, &obj.Icon, &obj.Service, &obj.CreatedAt, &obj.UpdatedAt, &obj.Order, &obj.SslPorts, &obj.Issuer, &obj.Language, &obj.Support, &obj.Displays, &obj.Status)
+	rows.Close()
+	return obj
+}
+
 // GetFuncPermissions Structure of the permissions
 func GetFuncPermissions(userID string) []string {
 	roleIDs := getRoleMapsFromUserID(userID)
