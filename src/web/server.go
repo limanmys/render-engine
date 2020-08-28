@@ -6,6 +6,7 @@ import (
 	"renderer/src/helpers"
 	"renderer/src/sqlite"
 	"strconv"
+	"strings"
 
 	"github.com/gorilla/mux"
 )
@@ -51,6 +52,11 @@ func permissionsMiddleware(next http.Handler) http.Handler {
 				_, _ = w.Write([]byte("nope5"))
 				return
 			}
+		}
+
+		if strings.TrimSpace(executeCommand("cat /liman/server/.env | grep 'LIMAN_RESTRICTED=true' >/dev/null && echo 1 || echo 0")) == "1" {
+			next.ServeHTTP(w, r)
+			return
 		}
 
 		permissions := sqlite.GetObjPermissions(userID)
