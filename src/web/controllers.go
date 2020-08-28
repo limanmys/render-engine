@@ -129,6 +129,38 @@ func runExtensionHandler(w http.ResponseWriter, r *http.Request) {
 			status = 200
 		}
 	}
+
+	w.Header().Set("Content-Type", contentType)
+	w.WriteHeader(status)
+	_, _ = w.Write([]byte(output + "\n"))
+}
+
+func externalAPIHandler(w http.ResponseWriter, r *http.Request) {
+	parsedRequest, err := validateAndExtractRequest(r)
+	if err != nil {
+		w.WriteHeader(403)
+		_, _ = w.Write([]byte(err.Error()))
+		return
+	}
+
+	command := sandbox.GeneratePHPCommand(parsedRequest.Target, parsedRequest.UserID, parsedRequest.ExtensionID, parsedRequest.ServerID, parsedRequest.RequestData, parsedRequest.Token, parsedRequest.BaseURL, parsedRequest.Locale, parsedRequest.LogObject)
+
+	sandbox.WriteRegularLog(parsedRequest.LogObject)
+
+	output := executeCommand(command)
+	var objmap map[string]json.RawMessage
+	err = json.Unmarshal([]byte(output), &objmap)
+	contentType := "text/plain"
+	var status int
+	if err != nil {
+		status = 200
+	} else {
+		contentType = "application/json"
+		status, err = strconv.Atoi(strings.Trim(string(objmap["status"]), "\""))
+		if err != nil {
+			status = 200
+		}
+	}
 	w.Header().Set("Content-Type", contentType)
 	w.WriteHeader(status)
 	_, _ = w.Write([]byte(output + "\n"))
@@ -144,7 +176,6 @@ func backgroundJobHandler(w http.ResponseWriter, r *http.Request) {
 	parsedRequest.LogObject.Display = "false"
 	command := sandbox.GeneratePHPCommand(parsedRequest.Target, parsedRequest.UserID, parsedRequest.ExtensionID, parsedRequest.ServerID, parsedRequest.RequestData, parsedRequest.Token, parsedRequest.BaseURL, parsedRequest.Locale, parsedRequest.LogObject)
 	sandbox.WriteRegularLog(parsedRequest.LogObject)
-
 	go executeCommand(command)
 
 	w.Header().Set("Content-Type", "text/plain")

@@ -56,7 +56,7 @@ func GeneratePHPCommand(targetFunction string, userID string, extensionID string
 
 	result["publicPath"] = baseURL + "/eklenti/" + extension.ID + "/public/"
 
-	b, _ = json.Marshal(sqlite.GetPermissions(userID))
+	b, _ = json.Marshal(sqlite.GetFuncPermissions(userID))
 	result["permissions"] = string(b)
 
 	soPath := "/liman/extensions/" + strings.ToLower(extension.Name) + "/liman.so"

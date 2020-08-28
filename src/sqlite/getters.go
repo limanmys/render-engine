@@ -34,15 +34,29 @@ func getExtension(extensionID string) ExtensionModel {
 	return obj
 }
 
-// GetPermissions Structure of the permissions
-func GetPermissions(userID string) []string {
+// GetFuncPermissions Structure of the permissions
+func GetFuncPermissions(userID string) []string {
 	roleIDs := getRoleMapsFromUserID(userID)
 	var permissions []string
 	for _, roleID := range roleIDs {
-		permissions = append(permissions, getPermissionsFromMorphID(roleID)...)
+		permissions = append(permissions, getFuncPermissionsFromMorphID(roleID)...)
 	}
 
-	permissions = append(permissions, getPermissionsFromMorphID(userID)...)
+	permissions = append(permissions, getFuncPermissionsFromMorphID(userID)...)
+
+	permissions = helpers.UniqueStrings(permissions)
+	return permissions
+}
+
+// GetObjPermissions Structure of the permissions
+func GetObjPermissions(userID string) []string {
+	roleIDs := getRoleMapsFromUserID(userID)
+	var permissions []string
+	for _, roleID := range roleIDs {
+		permissions = append(permissions, getObjPermissionsFromMorphID(roleID)...)
+	}
+
+	permissions = append(permissions, getObjPermissionsFromMorphID(userID)...)
 
 	permissions = helpers.UniqueStrings(permissions)
 	return permissions
@@ -60,7 +74,19 @@ func getRoleMapsFromUserID(userID string) []string {
 	return roleIDs
 }
 
-func getPermissionsFromMorphID(morphID string) []string {
+func getObjPermissionsFromMorphID(morphID string) []string {
+	rows, _ := db.Query("SELECT * FROM permissions WHERE (morph_id=? and not type='function')", morphID)
+	var permissions []string
+	for rows.Next() {
+		obj := Permission{}
+		rows.Scan(&obj.ID, &obj.CreatedAt, &obj.UpdatedAt, &obj.Type, &obj.Key, &obj.Value, &obj.Extra, &obj.Blame, &obj.MorphID, &obj.MorphType)
+		permissions = append(permissions, obj.Value)
+	}
+	rows.Close()
+	return permissions
+}
+
+func getFuncPermissionsFromMorphID(morphID string) []string {
 	rows, _ := db.Query("SELECT * FROM permissions WHERE (morph_id=? and type='function')", morphID)
 	var permissions []string
 	for rows.Next() {
