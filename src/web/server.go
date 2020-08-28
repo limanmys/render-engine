@@ -11,11 +11,6 @@ import (
 	"github.com/gorilla/mux"
 )
 
-var (
-	certPath = "/liman/certs/liman.crt"
-	keyPath  = "/liman/certs/liman.key"
-)
-
 // CreateWebServer Create Web Server
 func CreateWebServer() {
 	port := 5454
@@ -52,6 +47,12 @@ func permissionsMiddleware(next http.Handler) http.Handler {
 				_, _ = w.Write([]byte("nope5"))
 				return
 			}
+		}
+
+		userObj := sqlite.GetUser(userID)
+		if userObj.Status == 1 {
+			next.ServeHTTP(w, r)
+			return
 		}
 
 		if strings.TrimSpace(executeCommand("cat /liman/server/.env | grep 'LIMAN_RESTRICTED=true' >/dev/null && echo 1 || echo 0")) == "1" {
