@@ -1,6 +1,7 @@
 package sqlite
 
 import (
+	"encoding/json"
 	"renderer/src/helpers"
 
 	"github.com/mervick/aes-everywhere/go/aes256"
@@ -170,4 +171,24 @@ func GetUser(userID string) UserModel {
 	obj.RememberToken = ""
 	obj.ObjectGUID = ""
 	return obj
+}
+
+//GetServerKey Retrieve the user key.
+func GetServerKey(userID string, serverID string) (string, string) {
+	decryptionKey := helpers.AppKey + userID + serverID
+	rows, _ := db.Query("SELECT * FROM server_keys WHERE (user_id=? AND server_id=? )", userID, serverID)
+	rows.Next()
+	obj := ServerKey{}
+	rows.Scan(&obj.ID, &obj.Type, &obj.Data, &obj.ServerID, &obj.UserID, &obj.CreatedAt, &obj.UpdatedAt)
+	rows.Close()
+	if obj.Data == "" {
+		return "", ""
+	}
+	type keyData struct {
+		ClientUsername string `json:"clientUsername"`
+		ClientPassword string `json:"clientPassword"`
+	}
+	var key keyData
+	json.Unmarshal([]byte(obj.Data), &key)
+	return aes256.Decrypt(key.ClientUsername, decryptionKey), aes256.Decrypt(key.ClientPassword, decryptionKey)
 }
