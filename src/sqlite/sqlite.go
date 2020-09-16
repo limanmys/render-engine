@@ -12,7 +12,7 @@ var db *sql.DB
 
 // GetUserData opens the database
 func GetUserData(serverID string, extensionID string, userID string) (ServerModel, ExtensionModel, map[string]string) {
-	return getServer(serverID), getExtension(extensionID), getSettings(userID, serverID)
+	return GetServer(serverID), GetExtension(extensionID), getSettings(userID, serverID)
 }
 
 // GetUserIDFromToken Find token from token

@@ -16,7 +16,7 @@ func GeneratePHPCommand(targetFunction string, userID string, extensionID string
 	combinerPath := "/liman/sandbox/php/index.php"
 	server, extension, settings := sqlite.GetUserData(serverID, extensionID, userID)
 	user := sqlite.GetUser(userID)
-	clientUsername, clientPassword := sqlite.GetServerKey(userID, serverID)
+	clientUsername, clientPassword, _, _ := sqlite.GetServerKey(userID, serverID)
 
 	if clientUsername != "" && clientPassword != "" {
 		settings["clientUsername"] = clientUsername

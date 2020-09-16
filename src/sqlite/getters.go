@@ -17,7 +17,8 @@ func GetWidget(widgetID string) Widget {
 	return obj
 }
 
-func getServer(serverID string) ServerModel {
+//GetServer Retrieve server from id
+func GetServer(serverID string) ServerModel {
 	rows, _ := db.Query("SELECT * FROM servers WHERE id=? LIMIT 1", serverID)
 	obj := ServerModel{}
 	rows.Next()
@@ -26,7 +27,8 @@ func getServer(serverID string) ServerModel {
 	return obj
 }
 
-func getExtension(extensionID string) ExtensionModel {
+//GetExtension Retrieve extension from id
+func GetExtension(extensionID string) ExtensionModel {
 	rows, _ := db.Query("SELECT * FROM extensions WHERE id=? LIMIT 1", extensionID)
 	obj := ExtensionModel{}
 	rows.Next()
@@ -174,7 +176,7 @@ func GetUser(userID string) UserModel {
 }
 
 //GetServerKey Retrieve the user key.
-func GetServerKey(userID string, serverID string) (string, string) {
+func GetServerKey(userID string, serverID string) (string, string, string, ServerKey) {
 	decryptionKey := helpers.AppKey + userID + serverID
 	rows, _ := db.Query("SELECT * FROM server_keys WHERE (user_id=? AND server_id=? )", userID, serverID)
 	rows.Next()
@@ -182,13 +184,15 @@ func GetServerKey(userID string, serverID string) (string, string) {
 	rows.Scan(&obj.ID, &obj.Type, &obj.Data, &obj.ServerID, &obj.UserID, &obj.CreatedAt, &obj.UpdatedAt)
 	rows.Close()
 	if obj.Data == "" {
-		return "", ""
+		return "", "", "", ServerKey{}
 	}
 	type keyData struct {
 		ClientUsername string `json:"clientUsername"`
 		ClientPassword string `json:"clientPassword"`
+		KeyPort        string `json:"key_port"`
 	}
 	var key keyData
+
 	json.Unmarshal([]byte(obj.Data), &key)
-	return aes256.Decrypt(key.ClientUsername, decryptionKey), aes256.Decrypt(key.ClientPassword, decryptionKey)
+	return aes256.Decrypt(key.ClientUsername, decryptionKey), aes256.Decrypt(key.ClientPassword, decryptionKey), key.KeyPort, obj
 }
