@@ -52,13 +52,12 @@ func putFileHandler(w http.ResponseWriter, r *http.Request) {
 	if val2, ok := constants.ActiveConnections[userID+serverID]; ok {
 		val = val2
 	} else if keyObject.Type == "ssh" || keyObject.Type == "ssh_certificate" {
-		temp, res := connector.CreateConnection(userID, serverID, server.IPAddress)
+		res := connector.CreateConnection(userID, serverID, server.IPAddress, &val)
 		if res == false {
 			w.WriteHeader(403)
 			_, _ = w.Write([]byte("Cannot create connection"))
 			return
 		}
-		val.SSH = temp
 	}
 	if keyObject.Type == "ssh" || keyObject.Type == "ssh_certificate" {
 		if val.SFTP == nil {
@@ -139,13 +138,12 @@ func getFileHandler(w http.ResponseWriter, r *http.Request) {
 	if val2, ok := constants.ActiveConnections[userID+serverID]; ok {
 		val = val2
 	} else if keyObject.Type == "ssh" || keyObject.Type == "ssh_certificate" {
-		temp, res := connector.CreateConnection(userID, serverID, server.IPAddress)
+		res := connector.CreateConnection(userID, serverID, server.IPAddress, &val)
 		if res == false {
 			w.WriteHeader(403)
 			_, _ = w.Write([]byte("Cannot create connection"))
 			return
 		}
-		val.SSH = temp
 	}
 	if keyObject.Type == "ssh" || keyObject.Type == "ssh_certificate" {
 		if val.SFTP == nil {
@@ -217,21 +215,19 @@ func runCommandHandler(w http.ResponseWriter, r *http.Request) {
 	if val2, ok := constants.ActiveConnections[userID+serverID]; ok {
 		val = val2
 	} else {
-		temp, res := connector.CreateConnection(userID, serverID, server.IPAddress)
+		res := connector.CreateConnection(userID, serverID, server.IPAddress, &val)
 		if res == false {
 			w.WriteHeader(403)
 			_, _ = w.Write([]byte("Cannot create connection"))
 			return
 		}
-		val.SSH = temp
-
 	}
 	val.LastConnection = time.Now()
 	constants.ActiveConnections[userID+serverID] = val
 
 	w.Header().Set("Content-Type", "text/plain")
 	w.WriteHeader(200)
-	_, _ = w.Write([]byte(connector.RunCommand(val.SSH, command)))
+	_, _ = w.Write([]byte(connector.RunCommand(&val, command)))
 }
 
 func openTunnelHandler(w http.ResponseWriter, r *http.Request) {
@@ -290,13 +286,12 @@ func openTunnelHandler(w http.ResponseWriter, r *http.Request) {
 	if val2, ok := constants.ActiveConnections[userID+serverID]; ok {
 		val = val2
 	} else {
-		temp, res := connector.CreateConnection(userID, serverID, server.IPAddress)
+		res := connector.CreateConnection(userID, serverID, server.IPAddress, &val)
 		if res == false {
 			w.WriteHeader(403)
 			_, _ = w.Write([]byte("Cannot create connection"))
 			return
 		}
-		val.SSH = temp
 	}
 
 	val.LastConnection = time.Now()
@@ -370,20 +365,18 @@ func runOutsideCommandHandler(w http.ResponseWriter, r *http.Request) {
 	if val2, ok := constants.ActiveConnections[userID+remoteHost+username]; ok {
 		val = val2
 	} else {
-		temp, res := connector.RawCreateConnection(connectionType, username, password, remoteHost, remotePort)
+		res := connector.RawCreateConnection(&val, connectionType, username, password, remoteHost, remotePort)
 		if res == false {
 			w.WriteHeader(403)
 			_, _ = w.Write([]byte("Cannot create connection"))
 			return
 		}
-		val.SSH = temp
-
 	}
 
 	val.LastConnection = time.Now()
 	constants.ActiveConnections[userID+remoteHost+username] = val
-
+	output := connector.RunCommand(&val, command)
 	w.Header().Set("Content-Type", "text/plain")
 	w.WriteHeader(200)
-	_, _ = w.Write([]byte(connector.RunCommand(val.SSH, command)))
+	_, _ = w.Write([]byte(output))
 }

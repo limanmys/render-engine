@@ -41,14 +41,3 @@ func InitShellWithCertificate(username string, certificate string, hostname stri
 
 	return conn, nil
 }
-
-//RunCommand Run Command through ssh
-func RunCommand(conn *ssh.Client, command string) string {
-	sess, err := conn.NewSession()
-	defer sess.Close()
-	output, err := sess.Output(command + " 2>&1")
-	if err != nil {
-		panic(err)
-	}
-	return string(output)
-}

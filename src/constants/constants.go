@@ -3,6 +3,8 @@ package constants
 import (
 	"time"
 
+	"github.com/masterzen/winrm"
+
 	"github.com/hirochachacha/go-smb2"
 	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
@@ -13,6 +15,7 @@ type Connection struct {
 	SSH            *ssh.Client
 	SFTP           *sftp.Client
 	SMB            *smb2.Session
+	WinRM          *winrm.Client
 	LastConnection time.Time
 }
 
