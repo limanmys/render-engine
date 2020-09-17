@@ -2,10 +2,11 @@ package web
 
 import (
 	"net/http"
+	"renderer/src/connector"
 	"renderer/src/constants"
 	"renderer/src/sqlite"
-	"renderer/src/ssh"
 	"strconv"
+	"time"
 )
 
 func putFileHandler(w http.ResponseWriter, r *http.Request) {
@@ -45,12 +46,13 @@ func putFileHandler(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write([]byte("localPath?"))
 		return
 	}
-
+	username, password, _, keyObject := sqlite.GetServerKey(userID, serverID)
 	var val constants.Connection
+	flag := false
 	if val2, ok := constants.ActiveConnections[userID+serverID]; ok {
 		val = val2
-	} else {
-		temp, res := ssh.CreateConnection(userID, serverID, server.IPAddress)
+	} else if keyObject.Type == "ssh" || keyObject.Type == "ssh_certificate" {
+		temp, res := connector.CreateConnection(userID, serverID, server.IPAddress)
 		if res == false {
 			w.WriteHeader(403)
 			_, _ = w.Write([]byte("Cannot create connection"))
@@ -58,13 +60,31 @@ func putFileHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		val.SSH = temp
 	}
-	if val.SFTP == nil {
-		val.SFTP = ssh.OpenSFTPConnection(val.SSH)
-	}
+	if keyObject.Type == "ssh" || keyObject.Type == "ssh_certificate" {
+		if val.SFTP == nil {
+			val.SFTP = connector.OpenSFTPConnection(val.SSH)
+		}
+		flag = connector.PutFileSFTP(val.SFTP, localPath, remotePath)
+	} else if keyObject.Type == "winrm" {
+		if val.SMB == nil {
+			temp, err := connector.OpenSMBConnection(server.IPAddress, username, password)
+			if err != nil {
+				w.WriteHeader(403)
+				_, _ = w.Write([]byte("Cannot create connection"))
+				return
+			}
+			val.SMB = temp
+		}
+		flag = connector.PutFileSMB(val.SMB, localPath, remotePath)
 
+	} else {
+		w.WriteHeader(403)
+		_, _ = w.Write([]byte("unsupported key type?"))
+		return
+	}
+	val.LastConnection = time.Now()
 	constants.ActiveConnections[userID+serverID] = val
 
-	flag := ssh.PutFile(val.SFTP, localPath, remotePath)
 	w.Header().Set("Content-Type", "text/plain")
 	if flag == true {
 		w.WriteHeader(200)
@@ -113,12 +133,13 @@ func getFileHandler(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write([]byte("localPath?"))
 		return
 	}
-
+	username, password, _, keyObject := sqlite.GetServerKey(userID, serverID)
 	var val constants.Connection
+	flag := false
 	if val2, ok := constants.ActiveConnections[userID+serverID]; ok {
 		val = val2
-	} else {
-		temp, res := ssh.CreateConnection(userID, serverID, server.IPAddress)
+	} else if keyObject.Type == "ssh" || keyObject.Type == "ssh_certificate" {
+		temp, res := connector.CreateConnection(userID, serverID, server.IPAddress)
 		if res == false {
 			w.WriteHeader(403)
 			_, _ = w.Write([]byte("Cannot create connection"))
@@ -126,13 +147,31 @@ func getFileHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		val.SSH = temp
 	}
-	if val.SFTP == nil {
-		val.SFTP = ssh.OpenSFTPConnection(val.SSH)
-	}
+	if keyObject.Type == "ssh" || keyObject.Type == "ssh_certificate" {
+		if val.SFTP == nil {
+			val.SFTP = connector.OpenSFTPConnection(val.SSH)
+		}
+		flag = connector.GetFileSFTP(val.SFTP, localPath, remotePath)
+	} else if keyObject.Type == "winrm" {
+		if val.SMB == nil {
+			temp, err := connector.OpenSMBConnection(server.IPAddress, username, password)
+			if err != nil {
+				w.WriteHeader(403)
+				_, _ = w.Write([]byte("Cannot create connection"))
+				return
+			}
+			val.SMB = temp
+		}
+		flag = connector.GetFileSMB(val.SMB, localPath, remotePath)
 
+	} else {
+		w.WriteHeader(403)
+		_, _ = w.Write([]byte("unsupported key type?"))
+		return
+	}
+	val.LastConnection = time.Now()
 	constants.ActiveConnections[userID+serverID] = val
 
-	flag := ssh.GetFile(val.SFTP, localPath, remotePath)
 	w.Header().Set("Content-Type", "text/plain")
 	if flag == true {
 		w.WriteHeader(200)
@@ -178,7 +217,7 @@ func runCommandHandler(w http.ResponseWriter, r *http.Request) {
 	if val2, ok := constants.ActiveConnections[userID+serverID]; ok {
 		val = val2
 	} else {
-		temp, res := ssh.CreateConnection(userID, serverID, server.IPAddress)
+		temp, res := connector.CreateConnection(userID, serverID, server.IPAddress)
 		if res == false {
 			w.WriteHeader(403)
 			_, _ = w.Write([]byte("Cannot create connection"))
@@ -186,12 +225,13 @@ func runCommandHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		val.SSH = temp
 
-		constants.ActiveConnections[userID+serverID] = val
 	}
+	val.LastConnection = time.Now()
+	constants.ActiveConnections[userID+serverID] = val
 
 	w.Header().Set("Content-Type", "text/plain")
 	w.WriteHeader(200)
-	_, _ = w.Write([]byte(ssh.RunCommand(val.SSH, command)))
+	_, _ = w.Write([]byte(connector.RunCommand(val.SSH, command)))
 }
 
 func openTunnelHandler(w http.ResponseWriter, r *http.Request) {
@@ -250,7 +290,7 @@ func openTunnelHandler(w http.ResponseWriter, r *http.Request) {
 	if val2, ok := constants.ActiveConnections[userID+serverID]; ok {
 		val = val2
 	} else {
-		temp, res := ssh.CreateConnection(userID, serverID, server.IPAddress)
+		temp, res := connector.CreateConnection(userID, serverID, server.IPAddress)
 		if res == false {
 			w.WriteHeader(403)
 			_, _ = w.Write([]byte("Cannot create connection"))
@@ -259,8 +299,10 @@ func openTunnelHandler(w http.ResponseWriter, r *http.Request) {
 		val.SSH = temp
 	}
 
+	val.LastConnection = time.Now()
 	constants.ActiveConnections[userID+serverID] = val
-	port := ssh.CreateTunnel(remoteHost, remotePort, username, password)
+
+	port := connector.CreateTunnel(remoteHost, remotePort, username, password)
 	w.Header().Set("Content-Type", "text/plain")
 	w.WriteHeader(200)
 	_, _ = w.Write([]byte(strconv.Itoa(port)))
@@ -328,7 +370,7 @@ func runOutsideCommandHandler(w http.ResponseWriter, r *http.Request) {
 	if val2, ok := constants.ActiveConnections[userID+remoteHost+username]; ok {
 		val = val2
 	} else {
-		temp, res := ssh.RawCreateConnection(connectionType, username, password, remoteHost, remotePort)
+		temp, res := connector.RawCreateConnection(connectionType, username, password, remoteHost, remotePort)
 		if res == false {
 			w.WriteHeader(403)
 			_, _ = w.Write([]byte("Cannot create connection"))
@@ -336,10 +378,12 @@ func runOutsideCommandHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		val.SSH = temp
 
-		constants.ActiveConnections[userID+remoteHost+username] = val
 	}
+
+	val.LastConnection = time.Now()
+	constants.ActiveConnections[userID+remoteHost+username] = val
 
 	w.Header().Set("Content-Type", "text/plain")
 	w.WriteHeader(200)
-	_, _ = w.Write([]byte(ssh.RunCommand(val.SSH, command)))
+	_, _ = w.Write([]byte(connector.RunCommand(val.SSH, command)))
 }

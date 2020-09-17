@@ -1,4 +1,4 @@
-package ssh
+package connector
 
 import (
 	"fmt"
@@ -20,8 +20,8 @@ func OpenSFTPConnection(conn *ssh.Client) *sftp.Client {
 	return client
 }
 
-//PutFile Send file
-func PutFile(conn *sftp.Client, localPath string, remotePath string) bool {
+//PutFileSFTP Send file
+func PutFileSFTP(conn *sftp.Client, localPath string, remotePath string) bool {
 	w := conn.Walk(filepath.Dir(remotePath))
 	for w.Step() {
 		if w.Err() != nil {
@@ -31,13 +31,13 @@ func PutFile(conn *sftp.Client, localPath string, remotePath string) bool {
 
 	f, err := conn.Create(filepath.Base(remotePath))
 	if err != nil {
-		log.Fatal(err)
+		return false
 	}
 
 	defer f.Close()
 	srcFile, err := os.Open(localPath)
 	if err != nil {
-		log.Fatal(err)
+		return false
 	}
 	defer srcFile.Close()
 
@@ -48,8 +48,8 @@ func PutFile(conn *sftp.Client, localPath string, remotePath string) bool {
 	return true
 }
 
-//GetFile Send file
-func GetFile(conn *sftp.Client, localPath string, remotePath string) bool {
+//GetFileSFTP Send file
+func GetFileSFTP(conn *sftp.Client, localPath string, remotePath string) bool {
 	w := conn.Walk(filepath.Dir(remotePath))
 	for w.Step() {
 		if w.Err() != nil {
@@ -59,7 +59,7 @@ func GetFile(conn *sftp.Client, localPath string, remotePath string) bool {
 
 	f, err := conn.Open(remotePath)
 	if err != nil {
-		log.Fatal(err)
+		return false
 	}
 
 	defer f.Close()
@@ -71,7 +71,7 @@ func GetFile(conn *sftp.Client, localPath string, remotePath string) bool {
 
 	srcFile, err := os.OpenFile(localPath, os.O_APPEND|os.O_WRONLY, os.ModeAppend)
 	if err != nil {
-		log.Fatal(err)
+		return false
 	}
 	defer srcFile.Close()
 

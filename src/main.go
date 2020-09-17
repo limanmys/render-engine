@@ -3,6 +3,7 @@ package main
 import (
 	"renderer/src/constants"
 	"renderer/src/helpers"
+	"renderer/src/recycle"
 	"renderer/src/sqlite"
 	"renderer/src/web"
 )
@@ -14,6 +15,7 @@ func main() {
 
 	sqlite.InitDB()
 
-	web.CreateWebServer()
+	go recycle.Start()
 
+	web.CreateWebServer()
 }

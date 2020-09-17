@@ -3,6 +3,7 @@ package sqlite
 import (
 	"database/sql"
 	"renderer/src/helpers"
+	"renderer/src/models"
 
 	//Sqlite3
 	_ "github.com/mattn/go-sqlite3"
@@ -11,7 +12,7 @@ import (
 var db *sql.DB
 
 // GetUserData opens the database
-func GetUserData(serverID string, extensionID string, userID string) (ServerModel, ExtensionModel, map[string]string) {
+func GetUserData(serverID string, extensionID string, userID string) (models.ServerModel, models.ExtensionModel, map[string]string) {
 	return GetServer(serverID), GetExtension(extensionID), getSettings(userID, serverID)
 }
 
