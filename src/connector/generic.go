@@ -85,3 +85,15 @@ func RunCommand(val *constants.Connection, command string) string {
 	}
 	return ""
 }
+
+//VerifyAuth VerifyAuth
+func VerifyAuth(username string, password string, ipAddress string, port string, keyType string) bool {
+	if keyType == "ssh" {
+		return VerifySSH(username, password, ipAddress, port)
+	} else if keyType == "ssh_certificate" {
+		return VerifySSHCertificate(username, password, ipAddress, port)
+	} else if keyType == "winrm" {
+		return VerifyWinRM(username, password, ipAddress, port)
+	}
+	return true
+}

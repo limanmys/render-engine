@@ -1,6 +1,7 @@
 package web
 
 import (
+	"fmt"
 	"net/http"
 	"renderer/src/connector"
 	"renderer/src/constants"
@@ -83,7 +84,7 @@ func putFileHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	val.LastConnection = time.Now()
 	constants.ActiveConnections[userID+serverID] = val
-
+	fmt.Println(remotePath, localPath)
 	w.Header().Set("Content-Type", "text/plain")
 	if flag == true {
 		w.WriteHeader(200)
@@ -379,4 +380,52 @@ func runOutsideCommandHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain")
 	w.WriteHeader(200)
 	_, _ = w.Write([]byte(output))
+}
+
+func verifyHandler(w http.ResponseWriter, r *http.Request) {
+	IPAddress := r.FormValue("ip_address")
+	if IPAddress == "" {
+		w.WriteHeader(403)
+		_, _ = w.Write([]byte("IPAddress?"))
+		return
+	}
+
+	username := r.FormValue("username")
+	if username == "" {
+		w.WriteHeader(403)
+		_, _ = w.Write([]byte("username?"))
+		return
+	}
+
+	password := r.FormValue("password")
+	if password == "" {
+		w.WriteHeader(403)
+		_, _ = w.Write([]byte("password?"))
+		return
+	}
+
+	port := r.FormValue("port")
+	if port == "" {
+		w.WriteHeader(403)
+		_, _ = w.Write([]byte("port?"))
+		return
+	}
+
+	keyType := r.FormValue("keyType")
+	if keyType == "" {
+		w.WriteHeader(403)
+		_, _ = w.Write([]byte("keyType?"))
+		return
+	}
+
+	flag := connector.VerifyAuth(username, password, IPAddress, port, keyType)
+
+	w.Header().Set("Content-Type", "text/plain")
+	if flag == true {
+		w.WriteHeader(200)
+		_, _ = w.Write([]byte("ok"))
+	} else {
+		w.WriteHeader(201)
+		_, _ = w.Write([]byte("nok"))
+	}
 }

@@ -15,7 +15,7 @@ import (
 func OpenSFTPConnection(conn *ssh.Client) *sftp.Client {
 	client, err := sftp.NewClient(conn)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("SFTP > " + err.Error())
 	}
 	return client
 }

@@ -14,6 +14,7 @@ func CreateTunnel(remoteHost string, remotePort string, username string, passwor
 	port, err := freeport.GetFreePort()
 	if err != nil {
 		log.Fatal(err)
+		return 0
 	}
 	remotePortInt, _ := strconv.Atoi(remotePort)
 	sshTun := sshtun.New(port, remoteHost, remotePortInt)

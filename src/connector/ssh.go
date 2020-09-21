@@ -41,3 +41,39 @@ func InitShellWithCertificate(username string, certificate string, hostname stri
 
 	return conn, nil
 }
+
+//VerifySSH VerifySSH
+func VerifySSH(username string, password string, ipAddress string, port string) bool {
+	config := &ssh.ClientConfig{
+		User: username,
+		Auth: []ssh.AuthMethod{
+			ssh.Password(password),
+		},
+		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+	}
+	conn, err := ssh.Dial("tcp", ipAddress+":"+port, config)
+
+	if err != nil {
+		return false
+	}
+	defer conn.Close()
+	return true
+}
+
+//VerifySSHCertificate VerifySSHCertificate
+func VerifySSHCertificate(username string, certificate string, ipAddress string, port string) bool {
+	key, err := ssh.ParsePrivateKey([]byte(certificate))
+	config := &ssh.ClientConfig{
+		User: username,
+		Auth: []ssh.AuthMethod{
+			ssh.PublicKeys(key),
+		},
+		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+	}
+	conn, err := ssh.Dial("tcp", ipAddress+":"+port, config)
+	defer conn.Close()
+	if err != nil {
+		return false
+	}
+	return true
+}

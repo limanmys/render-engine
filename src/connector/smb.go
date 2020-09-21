@@ -3,7 +3,6 @@ package connector
 import (
 	"fmt"
 	"io"
-	"log"
 	"net"
 	"os"
 	"path/filepath"
@@ -36,18 +35,18 @@ func OpenSMBConnection(ipAddress string, username string, password string) (*smb
 func PutFileSMB(session *smb2.Session, localPath string, remotePath string) bool {
 	fs, err := session.Mount("C$")
 	if err != nil {
-		panic(err)
+		return false
 	}
 	defer fs.Umount()
 
 	f, err := fs.Create(filepath.Base(remotePath))
 	if err != nil {
-		panic(err)
+		return false
 	}
 	defer f.Close()
 	srcFile, err := os.Open(localPath)
 	if err != nil {
-		log.Fatal(err)
+		return false
 	}
 	defer srcFile.Close()
 
@@ -68,7 +67,7 @@ func GetFileSMB(session *smb2.Session, localPath string, remotePath string) bool
 
 	f, err := fs.Open(remotePath)
 	if err != nil {
-		log.Fatal(err)
+		return false
 	}
 
 	defer f.Close()
@@ -80,7 +79,7 @@ func GetFileSMB(session *smb2.Session, localPath string, remotePath string) bool
 
 	srcFile, err := os.OpenFile(localPath, os.O_APPEND|os.O_WRONLY, os.ModeAppend)
 	if err != nil {
-		log.Fatal(err)
+		return false
 	}
 	defer srcFile.Close()
 

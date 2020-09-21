@@ -26,9 +26,10 @@ func CreateWebServer() {
 	r.HandleFunc("/putFile", putFileHandler)
 	r.HandleFunc("/getFile", getFileHandler)
 	r.HandleFunc("/openTunnel", openTunnelHandler)
+	r.HandleFunc("/verify", verifyHandler)
 	r.Use(loggingMiddleware)
 	r.Use(permissionsMiddleware)
-	log.Fatal(http.ListenAndServe("127.0.0.1:"+strconv.Itoa(port), r))
+	log.Fatal(http.ListenAndServeTLS("127.0.0.1:"+strconv.Itoa(port), "/liman/certs/liman.crt", "/liman/certs/liman.key", r))
 }
 
 func permissionsMiddleware(next http.Handler) http.Handler {
