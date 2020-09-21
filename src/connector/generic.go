@@ -2,12 +2,11 @@ package connector
 
 import (
 	"fmt"
-	"renderer/src/constants"
 	"renderer/src/sqlite"
 )
 
-//CreateConnection CreateConnection
-func CreateConnection(userID string, serverID string, IPAddress string, val *constants.Connection) bool {
+//CreateShell CreateShell
+func (val *Connection) CreateShell(userID string, serverID string, IPAddress string) bool {
 	username, password, keyPort, keyObject := sqlite.GetServerKey(userID, serverID)
 	if keyObject.Type == "ssh" {
 		fmt.Println("Creating a new SSH Connection for " + IPAddress)
@@ -36,8 +35,36 @@ func CreateConnection(userID string, serverID string, IPAddress string, val *con
 	return true
 }
 
-//RawCreateConnection RawCreateConnection
-func RawCreateConnection(val *constants.Connection, connectionType string, username string, password string, IPAddress string, keyPort string) bool {
+//CreateFileConnection CreateFileConnection
+func (val *Connection) CreateFileConnection(userID string, serverID string, IPAddress string) bool {
+	username, password, _, keyObject := sqlite.GetServerKey(userID, serverID)
+	if keyObject.Type == "ssh" || keyObject.Type == "ssh_certificate" {
+		if val.SFTP != nil {
+			return true
+		}
+
+		flag := val.CreateShell(userID, serverID, IPAddress)
+		if flag == false {
+			return false
+		}
+		val.SFTP = OpenSFTPConnection(val.SSH)
+	} else if keyObject.Type == "winrm" {
+		if val.SMB != nil {
+			return true
+		}
+		temp, err := OpenSMBConnection(IPAddress, username, password)
+		if err != nil {
+			return false
+		}
+		val.SMB = temp
+	} else {
+		return false
+	}
+	return true
+}
+
+//CreateShellRaw CreateShellRaw
+func (val *Connection) CreateShellRaw(connectionType string, username string, password string, IPAddress string, keyPort string) bool {
 	if connectionType == "ssh" {
 		fmt.Println("Creating a new SSH Connection for " + IPAddress)
 		connection, err := InitShellWithPassword(username, password, IPAddress, keyPort)
@@ -65,25 +92,45 @@ func RawCreateConnection(val *constants.Connection, connectionType string, usern
 	return true
 }
 
-//RunCommand Run Command through ssh
-func RunCommand(val *constants.Connection, command string) string {
+//Run Run through ssh
+func (val Connection) Run(command string) string {
 	if val.SSH != nil {
 		sess, err := val.SSH.NewSession()
 		defer sess.Close()
 		output, err := sess.Output(command + " 2>&1")
 		if err != nil {
-			return ""
+			return string(output) + err.Error()
 		}
 		return string(output)
 	} else if val.WinRM != nil {
 		stdout, stderr, _, err := val.WinRM.RunWithString(command, "")
 		if err != nil {
-			fmt.Println(err.Error())
+			return err.Error()
 		}
 
 		return stdout + stderr
 	}
-	return ""
+	return "Cannot run command!"
+}
+
+//Put Put through ssh
+func (val Connection) Put(localPath string, remotePath string) bool {
+	if val.SFTP != nil {
+		return PutFileSFTP(val.SFTP, localPath, remotePath)
+	} else if val.SMB != nil {
+		return PutFileSMB(val.SMB, localPath, remotePath)
+	}
+	return false
+}
+
+//Get Get through ssh
+func (val Connection) Get(localPath string, remotePath string) bool {
+	if val.SFTP != nil {
+		return GetFileSFTP(val.SFTP, localPath, remotePath)
+	} else if val.SMB != nil {
+		return GetFileSMB(val.SMB, localPath, remotePath)
+	}
+	return false
 }
 
 //VerifyAuth VerifyAuth
