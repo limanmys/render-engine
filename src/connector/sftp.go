@@ -29,7 +29,7 @@ func PutFileSFTP(conn *sftp.Client, localPath string, remotePath string) bool {
 		}
 	}
 
-	f, err := conn.Create(filepath.Base(remotePath))
+	f, err := conn.Create(remotePath)
 	if err != nil {
 		return false
 	}

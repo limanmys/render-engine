@@ -1,7 +1,7 @@
 package main
 
 import (
-	"renderer/src/constants"
+	"renderer/src/connector"
 	"renderer/src/helpers"
 	"renderer/src/recycle"
 	"renderer/src/sqlite"
@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	constants.ActiveConnections = make(map[string]constants.Connection)
+	connector.ActiveConnections = make(map[string]connector.Connection)
 
 	helpers.ReadDataFromLiman()
 

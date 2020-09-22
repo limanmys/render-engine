@@ -1,35 +1,34 @@
 package web
 
 import (
+	"errors"
 	"log"
 	"net/http"
 	"renderer/src/helpers"
 	"renderer/src/sqlite"
-	"strconv"
 	"strings"
-
-	"github.com/gorilla/mux"
 )
 
-// CreateWebServer Create Web Server
-func CreateWebServer() {
-	port := 5454
-	log.Printf("Starting Server on %d\n", port)
-
-	r := mux.NewRouter()
-	r.HandleFunc("/", runExtensionHandler)
-	r.HandleFunc("/sendLog", extensionLogHandler)
-	r.HandleFunc("/backgroundJob", backgroundJobHandler)
-	r.HandleFunc("/externalAPI", externalAPIHandler)
-	r.HandleFunc("/runCommand", runCommandHandler)
-	r.HandleFunc("/runOutsideCommand", runOutsideCommandHandler)
-	r.HandleFunc("/putFile", putFileHandler)
-	r.HandleFunc("/getFile", getFileHandler)
-	r.HandleFunc("/openTunnel", openTunnelHandler)
-	r.HandleFunc("/verify", verifyHandler)
-	r.Use(loggingMiddleware)
-	r.Use(permissionsMiddleware)
-	log.Fatal(http.ListenAndServeTLS("127.0.0.1:"+strconv.Itoa(port), "/liman/certs/liman.crt", "/liman/certs/liman.key", r))
+func extractRequestData(target []string, r *http.Request) (map[string]string, error) {
+	request := make(map[string]string)
+	target = append(target, "token")
+	for _, value := range target {
+		temp := r.FormValue(value)
+		if temp == "" {
+			return nil, errors.New(value + " is missing.")
+		}
+		if value == "token" {
+			//Try to get UserID from Token
+			userID := sqlite.GetUserIDFromToken(temp)
+			if userID == "" {
+				return nil, errors.New("token is not valid")
+			}
+			request["user_id"] = userID
+			continue
+		}
+		request[value] = temp
+	}
+	return request, nil
 }
 
 func permissionsMiddleware(next http.Handler) http.Handler {
