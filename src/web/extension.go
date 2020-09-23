@@ -114,6 +114,17 @@ func runExtensionHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	extensionObj := sqlite.GetExtension(parsedRequest.ExtensionID)
+
+	if extensionObj.RequireKey == "true" {
+		_, _, _, serverKey := sqlite.GetServerKey(parsedRequest.UserID, parsedRequest.ServerID)
+		if serverKey.Type == "" {
+			w.WriteHeader(403)
+			_, _ = w.Write([]byte("Bu eklentiyi kullanabilmek için bir anahtara ihtiyacınız var, lütfen kasa üzerinden bir anahtar ekleyin."))
+			return
+		}
+	}
+
 	command := sandbox.GeneratePHPCommand(parsedRequest.Target, parsedRequest.UserID, parsedRequest.ExtensionID, parsedRequest.ServerID, parsedRequest.RequestData, parsedRequest.Token, parsedRequest.BaseURL, parsedRequest.Locale, parsedRequest.LogObject)
 
 	sandbox.WriteRegularLog(parsedRequest.LogObject)
