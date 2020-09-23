@@ -113,7 +113,7 @@ func (val Connection) Run(command string) string {
 	if val.SSH != nil {
 		sess, err := val.SSH.NewSession()
 		defer sess.Close()
-		output, err := sess.Output(command + " 2>&1")
+		output, err := sess.Output(command)
 		if err != nil {
 			return string(output) + err.Error()
 		}
