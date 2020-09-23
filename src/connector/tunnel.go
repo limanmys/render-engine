@@ -23,7 +23,6 @@ func CreateTunnel(remoteHost string, remotePort string, username string, passwor
 	}
 	remotePortInt, _ := strconv.Atoi(remotePort)
 	sshTun := sshtun.New(port, remoteHost, remotePortInt)
-	sshTun.SetDebug(true)
 	sshTun.SetLocalHost("127.0.0.1")
 	sshTun.SetPassword(password)
 	sshTun.SetUser(username)
