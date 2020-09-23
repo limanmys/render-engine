@@ -11,6 +11,8 @@ import (
 func main() {
 	connector.ActiveConnections = make(map[string]connector.Connection)
 
+	connector.ActiveTunnels = make(map[string]connector.Tunnel)
+
 	helpers.ReadDataFromLiman()
 
 	sqlite.InitDB()

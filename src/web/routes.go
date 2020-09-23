@@ -24,6 +24,7 @@ func CreateWebServer() {
 	r.HandleFunc("/putFile", putFileHandler)
 	r.HandleFunc("/getFile", getFileHandler)
 	r.HandleFunc("/openTunnel", openTunnelHandler)
+	r.HandleFunc("/keepTunnelAlive", keepTunnelAliveHandler)
 	r.HandleFunc("/verify", verifyHandler)
 
 	r.Use(loggingMiddleware)

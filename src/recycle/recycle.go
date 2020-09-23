@@ -14,6 +14,12 @@ func Start() {
 			delete(connector.ActiveConnections, key)
 		}
 	}
+	for key, data := range connector.ActiveTunnels {
+		if now.Sub(data.LastConnection).Seconds() > 30 {
+			connector.ActiveTunnels[key].Tunnel.Stop()
+			delete(connector.ActiveTunnels, key)
+		}
+	}
 	time.Sleep(time.Second)
 	go Start()
 }

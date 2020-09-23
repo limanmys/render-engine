@@ -125,6 +125,27 @@ func openTunnelHandler(w http.ResponseWriter, r *http.Request) {
 	_, _ = w.Write([]byte(strconv.Itoa(port)))
 }
 
+func keepTunnelAliveHandler(w http.ResponseWriter, r *http.Request) {
+	target := []string{"remote_host", "remote_port", "username"}
+	request, err := extractRequestData(target, r)
+
+	if err != nil {
+		w.WriteHeader(403)
+		_, _ = w.Write([]byte(err.Error()))
+		return
+	}
+
+	key := request["remote_host"] + ":" + request["remote_port"] + ":" + request["username"]
+	if val, ok := connector.ActiveTunnels[key]; ok {
+		val.LastConnection = time.Now()
+		connector.ActiveTunnels[key] = val
+	}
+
+	w.Header().Set("Content-Type", "text/plain")
+	w.WriteHeader(200)
+	_, _ = w.Write([]byte("ok"))
+}
+
 func runOutsideCommandHandler(w http.ResponseWriter, r *http.Request) {
 	target := []string{"command", "connection_type", "remote_host", "remote_port", "username", "password"}
 	request, err := extractRequestData(target, r)

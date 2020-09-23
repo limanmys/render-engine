@@ -11,6 +11,11 @@ import (
 
 //CreateTunnel CreateTunnel
 func CreateTunnel(remoteHost string, remotePort string, username string, password string) int {
+	if val, ok := ActiveTunnels[remoteHost+":"+remotePort+":"+username]; ok {
+		val.LastConnection = time.Now()
+		return val.Port
+	}
+
 	port, err := freeport.GetFreePort()
 	if err != nil {
 		log.Fatal(err)
@@ -26,9 +31,12 @@ func CreateTunnel(remoteHost string, remotePort string, username string, passwor
 		for {
 			if err := sshTun.Start(); err != nil {
 				log.Printf("SSH tunnel stopped: %s", err.Error())
+				delete(ActiveTunnels, remoteHost+":"+remotePort+":"+username)
 				time.Sleep(time.Second)
 			}
 		}
 	}()
+	tunnel := Tunnel{Tunnel: sshTun, Port: port, LastConnection: time.Now()}
+	ActiveTunnels[remoteHost+":"+remotePort+":"+username] = tunnel
 	return port
 }
