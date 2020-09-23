@@ -7,7 +7,6 @@ import (
 	"renderer/src/connector"
 	"renderer/src/sqlite"
 	"strconv"
-	"strings"
 	"time"
 )
 
@@ -28,7 +27,15 @@ func putFileHandler(w http.ResponseWriter, r *http.Request) {
 
 	val.CreateFileConnection(request["user_id"], request["server_id"], server.IPAddress)
 
-	flag := val.Put(request["local_path"], request["remote_path"])
+	var remotePath string
+
+	if server.Os == "linux" {
+		remotePath = "/tmp/" + filepath.Base(request["remote_path"])
+	} else {
+		remotePath = val.WindowsPath + request["remote_path"]
+	}
+
+	flag := val.Put(request["local_path"], remotePath)
 
 	w.Header().Set("Content-Type", "text/plain")
 	if flag == true {
@@ -57,7 +64,15 @@ func getFileHandler(w http.ResponseWriter, r *http.Request) {
 
 	val.CreateFileConnection(request["user_id"], request["server_id"], server.IPAddress)
 
-	flag := val.Get(request["local_path"], request["remote_path"])
+	var remotePath string
+
+	if server.Os == "linux" {
+		remotePath = "/tmp/" + filepath.Base(request["remote_path"])
+	} else {
+		remotePath = val.WindowsPath + request["remote_path"]
+	}
+
+	flag := val.Get(request["local_path"], remotePath)
 
 	w.Header().Set("Content-Type", "text/plain")
 	if flag == true {
@@ -185,16 +200,14 @@ func runScriptHandler(w http.ResponseWriter, r *http.Request) {
 
 	val.CreateFileConnection(request["user_id"], request["server_id"], server.IPAddress)
 
-	remotePath := "/tmp/" + filepath.Base(request["local_path"])
-	if server.Os == "windows" {
-		letter := val.Run("$pwd.drive.name")
-		remotePath = strings.TrimSpace(letter) + ":\\Windows\\Temp\\" + filepath.Base(request["local_path"]) + ".ps1"
-	}
-	flag := val.Put(request["local_path"], remotePath)
+	var remotePath string
 
 	if server.Os == "linux" {
-		val.Run("chmod +x " + remotePath)
+		remotePath = "/tmp/" + filepath.Base(request["local_path"])
+	} else {
+		remotePath = val.WindowsPath + filepath.Base(request["local_path"]) + ".ps1"
 	}
+	flag := val.Put(request["local_path"], remotePath)
 
 	if flag == false {
 		w.WriteHeader(201)
@@ -202,7 +215,14 @@ func runScriptHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	output := val.Run(remotePath + " " + request["parameters"])
+	var output string
+	if server.Os == "linux" {
+		val.Run("chmod +x " + remotePath)
+		output = val.Run(remotePath + " " + request["parameters"])
+	} else {
+		output = val.Run(val.WindowsLetter + ":\\" + remotePath + " " + request["parameters"])
+	}
+
 	w.Header().Set("Content-Type", "text/plain")
 	w.WriteHeader(200)
 	_, _ = w.Write([]byte(output))

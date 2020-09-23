@@ -5,7 +5,6 @@ import (
 	"io"
 	"net"
 	"os"
-	"path/filepath"
 
 	"github.com/hirochachacha/go-smb2"
 )
@@ -32,43 +31,47 @@ func OpenSMBConnection(ipAddress string, username string, password string) (*smb
 }
 
 //PutFileSMB PutFileSMB
-func PutFileSMB(session *smb2.Session, localPath string, remotePath string) bool {
-	fs, err := session.Mount("C$")
+func PutFileSMB(session *smb2.Session, localPath string, remotePath string, remoteDisk string) bool {
+	fs, err := session.Mount(remoteDisk + "$")
 	if err != nil {
-		fmt.Println(err.Error())
+		fmt.Println("MOUNT > " + err.Error())
 		return false
 	}
 	defer fs.Umount()
 
-	f, err := fs.Create(filepath.Base(remotePath))
+	f, err := fs.Create(remotePath)
 	if err != nil {
-		fmt.Println(err.Error())
+		fmt.Println("CREATE > " + err.Error())
 		return false
 	}
 	defer f.Close()
 	srcFile, err := os.Open(localPath)
 	if err != nil {
+		fmt.Println("OPEN > " + err.Error())
 		return false
 	}
 	defer srcFile.Close()
 
 	_, err = io.Copy(f, srcFile)
 	if err != nil {
+		fmt.Println("COPY > " + err.Error())
 		return false
 	}
 	return true
 }
 
 //GetFileSMB GetFileSMB
-func GetFileSMB(session *smb2.Session, localPath string, remotePath string) bool {
-	fs, err := session.Mount("C$")
+func GetFileSMB(session *smb2.Session, localPath string, remotePath string, remoteDisk string) bool {
+	fs, err := session.Mount(remoteDisk + "$")
 	if err != nil {
-		panic(err)
+		fmt.Println(err.Error())
+		return false
 	}
 	defer fs.Umount()
 
 	f, err := fs.Open(remotePath)
 	if err != nil {
+		fmt.Println(err.Error())
 		return false
 	}
 
@@ -81,6 +84,7 @@ func GetFileSMB(session *smb2.Session, localPath string, remotePath string) bool
 
 	srcFile, err := os.OpenFile(localPath, os.O_APPEND|os.O_WRONLY, os.ModeAppend)
 	if err != nil {
+		fmt.Println(err.Error())
 		return false
 	}
 	defer srcFile.Close()

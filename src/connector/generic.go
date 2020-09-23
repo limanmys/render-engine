@@ -3,6 +3,7 @@ package connector
 import (
 	"errors"
 	"renderer/src/sqlite"
+	"strings"
 	"time"
 )
 
@@ -44,6 +45,9 @@ func (val *Connection) CreateShell(userID string, serverID string, IPAddress str
 			return false
 		}
 		val.WinRM = connection
+		val.WindowsPath = strings.TrimSpace(val.Run("echo $env:TEMP")) + "\\"
+		val.WindowsLetter = val.WindowsPath[0:1]
+		val.WindowsPath = val.WindowsPath[3:]
 	} else {
 		return false
 	}
@@ -115,7 +119,6 @@ func (val Connection) Run(command string) string {
 		}
 		return string(output)
 	} else if val.WinRM != nil {
-		// command = base64.StdEncoding.EncodeToString([]byte(helpers.EncodeMessageUTF16(command)))
 		stdout, stderr, _, err := val.WinRM.RunWithString("powershell.exe "+command, "")
 		if err != nil {
 			return err.Error()
@@ -126,22 +129,22 @@ func (val Connection) Run(command string) string {
 	return "Cannot run command!"
 }
 
-//Put Put through ssh
+//Put Put
 func (val Connection) Put(localPath string, remotePath string) bool {
 	if val.SFTP != nil {
 		return PutFileSFTP(val.SFTP, localPath, remotePath)
 	} else if val.SMB != nil {
-		return PutFileSMB(val.SMB, localPath, remotePath)
+		return PutFileSMB(val.SMB, localPath, remotePath, val.WindowsLetter)
 	}
 	return false
 }
 
-//Get Get through ssh
+//Get Get
 func (val Connection) Get(localPath string, remotePath string) bool {
 	if val.SFTP != nil {
 		return GetFileSFTP(val.SFTP, localPath, remotePath)
 	} else if val.SMB != nil {
-		return GetFileSMB(val.SMB, localPath, remotePath)
+		return GetFileSMB(val.SMB, localPath, remotePath, val.WindowsLetter)
 	}
 	return false
 }

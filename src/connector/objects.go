@@ -16,6 +16,8 @@ type Connection struct {
 	SMB            *smb2.Session
 	WinRM          *winrm.Client
 	LastConnection time.Time
+	WindowsLetter  string
+	WindowsPath    string
 }
 
 //ActiveConnections Active Connections
