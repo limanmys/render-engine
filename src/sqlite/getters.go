@@ -33,7 +33,7 @@ func GetExtension(extensionID string) models.ExtensionModel {
 	rows, _ := db.Query("SELECT * FROM extensions WHERE id=? LIMIT 1", extensionID)
 	obj := models.ExtensionModel{}
 	rows.Next()
-	rows.Scan(&obj.ID, &obj.Name, &obj.Version, &obj.Icon, &obj.Service, &obj.CreatedAt, &obj.UpdatedAt, &obj.Order, &obj.SslPorts, &obj.Issuer, &obj.Language, &obj.Support, &obj.Displays, &obj.Status)
+	rows.Scan(&obj.ID, &obj.Name, &obj.Version, &obj.Icon, &obj.Service, &obj.CreatedAt, &obj.UpdatedAt, &obj.Order, &obj.SslPorts, &obj.Issuer, &obj.Language, &obj.Support, &obj.Displays, &obj.Status, &obj.RequireKey)
 	rows.Close()
 	return obj
 }
@@ -43,7 +43,7 @@ func GetExtensionFromName(extensionName string) models.ExtensionModel {
 	rows, _ := db.Query("SELECT * FROM extensions WHERE UPPER(NAME) LIKE UPPER(?) LIMIT 1", extensionName)
 	obj := models.ExtensionModel{}
 	rows.Next()
-	rows.Scan(&obj.ID, &obj.Name, &obj.Version, &obj.Icon, &obj.Service, &obj.CreatedAt, &obj.UpdatedAt, &obj.Order, &obj.SslPorts, &obj.Issuer, &obj.Language, &obj.Support, &obj.Displays, &obj.Status)
+	rows.Scan(&obj.ID, &obj.Name, &obj.Version, &obj.Icon, &obj.Service, &obj.CreatedAt, &obj.UpdatedAt, &obj.Order, &obj.SslPorts, &obj.Issuer, &obj.Language, &obj.Support, &obj.Displays, &obj.Status, &obj.RequireKey)
 	rows.Close()
 	return obj
 }
