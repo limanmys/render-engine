@@ -35,12 +35,14 @@ func OpenSMBConnection(ipAddress string, username string, password string) (*smb
 func PutFileSMB(session *smb2.Session, localPath string, remotePath string) bool {
 	fs, err := session.Mount("C$")
 	if err != nil {
+		fmt.Println(err.Error())
 		return false
 	}
 	defer fs.Umount()
 
 	f, err := fs.Create(filepath.Base(remotePath))
 	if err != nil {
+		fmt.Println(err.Error())
 		return false
 	}
 	defer f.Close()

@@ -7,6 +7,7 @@ import (
 	"renderer/src/connector"
 	"renderer/src/sqlite"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -187,12 +188,13 @@ func runScriptHandler(w http.ResponseWriter, r *http.Request) {
 	remotePath := "/tmp/" + filepath.Base(request["local_path"])
 	if server.Os == "windows" {
 		letter := val.Run("$pwd.drive.name")
-		remotePath = letter + "\\Windows\\Temp\\" + filepath.Base(request["local_path"]) + ".ps1"
-	} else {
+		remotePath = strings.TrimSpace(letter) + ":\\Windows\\Temp\\" + filepath.Base(request["local_path"]) + ".ps1"
+	}
+	flag := val.Put(request["local_path"], remotePath)
+
+	if server.Os == "linux" {
 		val.Run("chmod +x " + remotePath)
 	}
-
-	flag := val.Put(request["local_path"], remotePath)
 
 	if flag == false {
 		w.WriteHeader(201)
