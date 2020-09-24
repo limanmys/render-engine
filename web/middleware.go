@@ -4,8 +4,8 @@ import (
 	"errors"
 	"log"
 	"net/http"
-	"renderer/src/helpers"
-	"renderer/src/sqlite"
+	"github.com/limanmys/go/helpers"
+	"github.com/limanmys/go/sqlite"
 	"strings"
 )
 

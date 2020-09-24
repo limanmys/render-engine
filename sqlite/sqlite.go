@@ -2,8 +2,8 @@ package sqlite
 
 import (
 	"database/sql"
-	"renderer/src/helpers"
-	"renderer/src/models"
+	"github.com/limanmys/go/helpers"
+	"github.com/limanmys/go/models"
 
 	//Sqlite3
 	_ "github.com/mattn/go-sqlite3"

@@ -2,8 +2,8 @@ package sqlite
 
 import (
 	"encoding/json"
-	"renderer/src/helpers"
-	"renderer/src/models"
+	"github.com/limanmys/go/helpers"
+	"github.com/limanmys/go/models"
 
 	"github.com/mervick/aes-everywhere/go/aes256"
 )

@@ -1,11 +1,11 @@
 package main
 
 import (
-	"renderer/src/connector"
-	"renderer/src/helpers"
-	"renderer/src/recycle"
-	"renderer/src/sqlite"
-	"renderer/src/web"
+	"github.com/limanmys/go/connector"
+	"github.com/limanmys/go/helpers"
+	"github.com/limanmys/go/recycle"
+	"github.com/limanmys/go/sqlite"
+	"github.com/limanmys/go/web"
 )
 
 func main() {

@@ -1,7 +1,7 @@
 package recycle
 
 import (
-	"renderer/src/connector"
+	"github.com/limanmys/go/connector"
 	"time"
 )
 

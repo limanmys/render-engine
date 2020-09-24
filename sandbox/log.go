@@ -4,7 +4,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"renderer/src/helpers"
+	"github.com/limanmys/go/helpers"
 	"time"
 )
 

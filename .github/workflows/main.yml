@@ -1,0 +1,21 @@
+name: Liman CI
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Getting Go Binaries
+        uses: actions/setup-go@v2
+        with:
+          go-version: '1.15'
+      - name: Build Liman Package
+        env:
+          SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
+        run: |
+          go build main.go
+          [ "$GITHUB_REF" == "refs/heads/master" ] && FILE_NAME="liman_go-$GITHUB_RUN_NUMBER" || FILE_NAME="liman_go-${GITHUB_REF#refs/heads/}-$GITHUB_RUN_NUMBER"
+          curl -F "file=@main" "https://slack.com/api/files.upload?token=$SLACK_TOKEN&channels=go-release&filename=$FILE_NAME&pretty=1&initial_comment=$COMMIT" || echo
+
+          

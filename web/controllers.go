@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"net/http"
 	"path/filepath"
-	"renderer/src/connector"
-	"renderer/src/sqlite"
+	"github.com/limanmys/go/connector"
+	"github.com/limanmys/go/sqlite"
 	"strconv"
 	"time"
 )

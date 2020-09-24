@@ -3,7 +3,7 @@ package connector
 import (
 	"encoding/base64"
 	"errors"
-	"renderer/src/sqlite"
+	"github.com/limanmys/go/sqlite"
 	"strings"
 	"time"
 

@@ -5,9 +5,9 @@ import (
 	"errors"
 	"net/http"
 	"os/exec"
-	"renderer/src/helpers"
-	"renderer/src/sandbox"
-	"renderer/src/sqlite"
+	"github.com/limanmys/go/helpers"
+	"github.com/limanmys/go/sandbox"
+	"github.com/limanmys/go/sqlite"
 	"strconv"
 	"strings"
 

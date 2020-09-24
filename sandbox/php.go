@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"os"
-	"renderer/src/sqlite"
+	"github.com/limanmys/go/sqlite"
 	"strings"
 
 	"github.com/mervick/aes-everywhere/go/aes256"
