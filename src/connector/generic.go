@@ -1,10 +1,13 @@
 package connector
 
 import (
+	"encoding/base64"
 	"errors"
 	"renderer/src/sqlite"
 	"strings"
 	"time"
+
+	"golang.org/x/text/encoding/unicode"
 )
 
 //GetConnection GetConnection
@@ -119,12 +122,15 @@ func (val Connection) Run(command string) string {
 		}
 		return string(output)
 	} else if val.WinRM != nil {
-		stdout, stderr, _, err := val.WinRM.RunWithString("powershell.exe "+command, "")
+		command = "$ProgressPreference = 'SilentlyContinue';" + command
+		encoder := unicode.UTF16(unicode.LittleEndian, unicode.IgnoreBOM).NewEncoder()
+		encoded, _ := encoder.String(command)
+		command = base64.StdEncoding.EncodeToString([]byte(encoded))
+		stdout, stderr, _, err := val.WinRM.RunWithString("powershell.exe -encodedCommand "+command, "")
 		if err != nil {
 			return err.Error()
 		}
-
-		return stdout + stderr
+		return strings.TrimSpace(stdout) + strings.TrimSpace(stderr)
 	}
 	return "Cannot run command!"
 }

@@ -1,6 +1,7 @@
 package web
 
 import (
+	"encoding/base64"
 	"fmt"
 	"net/http"
 	"path/filepath"
@@ -225,6 +226,7 @@ func runScriptHandler(w http.ResponseWriter, r *http.Request) {
 
 	if server.Os == "linux" {
 		remotePath = "/tmp/" + filepath.Base(request["local_path"])
+		val.Run("rm " + remotePath)
 	} else {
 		remotePath = val.WindowsPath + filepath.Base(request["local_path"]) + ".ps1"
 	}
@@ -239,6 +241,16 @@ func runScriptHandler(w http.ResponseWriter, r *http.Request) {
 	var output string
 	if server.Os == "linux" {
 		val.Run("chmod +x " + remotePath)
+		if request["root"] == "yes" {
+			_, password, _, keyObj := sqlite.GetServerKey(request["user_id"], request["server_id"])
+			if keyObj.Type == "ssh" {
+				encoded := base64.StdEncoding.EncodeToString([]byte(password))
+				sudo := "echo " + encoded + " | base64 -d | sudo -S -p ' ' id 2>/dev/null 1>/dev/null; sudo "
+				remotePath = sudo + remotePath
+			} else if keyObj.Type == "ssh_certificate" {
+				remotePath = "sudo " + remotePath
+			}
+		}
 		output = val.Run(remotePath + " " + request["parameters"])
 	} else {
 		output = val.Run(val.WindowsLetter + ":\\" + remotePath + " " + request["parameters"])
