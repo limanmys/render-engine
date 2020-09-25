@@ -26,6 +26,11 @@ func CreateTunnel(remoteHost string, remotePort string, username string, passwor
 	sshTun.SetLocalHost("127.0.0.1")
 	sshTun.SetPassword(password)
 	sshTun.SetUser(username)
+	tunnelState := sshtun.StateStarting
+	sshTun.SetConnState(func(tun *sshtun.SSHTun, state sshtun.ConnState) {
+		tunnelState = state
+	})
+
 	go func() {
 		for {
 			if err := sshTun.Start(); err != nil {
@@ -35,7 +40,13 @@ func CreateTunnel(remoteHost string, remotePort string, username string, passwor
 			}
 		}
 	}()
-	time.Sleep(5 * time.Second)
+
+	for {
+		if tunnelState == sshtun.StateStarted {
+			break
+		}
+	}
+
 	tunnel := Tunnel{Tunnel: sshTun, Port: port, LastConnection: time.Now()}
 	ActiveTunnels[remoteHost+":"+remotePort+":"+username] = tunnel
 	return port
