@@ -5,11 +5,12 @@ import (
 	"errors"
 	"net/http"
 	"os/exec"
+	"strconv"
+	"strings"
+
 	"github.com/limanmys/go/helpers"
 	"github.com/limanmys/go/sandbox"
 	"github.com/limanmys/go/sqlite"
-	"strconv"
-	"strings"
 
 	"github.com/google/uuid"
 )
@@ -115,6 +116,12 @@ func runExtensionHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	extensionObj := sqlite.GetExtension(parsedRequest.ExtensionID)
+
+	if extensionObj.Status == "0" {
+		w.WriteHeader(403)
+		_, _ = w.Write([]byte("Eklenti şu an güncelleniyor, lütfen birazdan tekrar deneyin."))
+		return
+	}
 
 	if extensionObj.RequireKey == "true" {
 		_, _, _, serverKey := sqlite.GetServerKey(parsedRequest.UserID, parsedRequest.ServerID)
