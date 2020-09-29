@@ -3,9 +3,10 @@ package connector
 import (
 	"encoding/base64"
 	"errors"
-	"github.com/limanmys/go/sqlite"
 	"strings"
 	"time"
+
+	"github.com/limanmys/go/sqlite"
 
 	"golang.org/x/text/encoding/unicode"
 )
@@ -114,12 +115,9 @@ func (val *Connection) CreateShellRaw(connectionType string, username string, pa
 //Run Run through ssh
 func (val Connection) Run(command string) string {
 	if val.SSH != nil {
-		sess, err := val.SSH.NewSession()
+		sess, _ := val.SSH.NewSession()
 		defer sess.Close()
-		output, err := sess.Output(command)
-		if err != nil {
-			return string(output) + err.Error()
-		}
+		output, _ := sess.Output(command)
 		return string(output)
 	} else if val.WinRM != nil {
 		command = "$ProgressPreference = 'SilentlyContinue';" + command
