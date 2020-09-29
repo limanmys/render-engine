@@ -118,7 +118,7 @@ func (val Connection) Run(command string) string {
 		sess, _ := val.SSH.NewSession()
 		defer sess.Close()
 		output, _ := sess.Output(command)
-		return string(output)
+		return strings.TrimSpace(string(output))
 	} else if val.WinRM != nil {
 		command = "$ProgressPreference = 'SilentlyContinue';" + command
 		encoder := unicode.UTF16(unicode.LittleEndian, unicode.IgnoreBOM).NewEncoder()
