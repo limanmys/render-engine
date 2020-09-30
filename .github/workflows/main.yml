@@ -14,8 +14,13 @@ jobs:
         env:
           SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
         run: |
+          DEBIAN_FRONTEND=noninteractive sudo apt install jq -yyq 1>/dev/null 2>/dev/null
+          COMMIT="${GITHUB_REF#refs/heads/} : "
+          COMMIT+=`git --git-dir=.git log -1 --pretty=%B`
+          COMMIT=`echo $COMMIT | jq -SrR @uri`
+          go test -v ./...
           go build main.go
-          [ "$GITHUB_REF" == "refs/heads/master" ] && FILE_NAME="liman_go-$GITHUB_RUN_NUMBER" || FILE_NAME="liman_go-${GITHUB_REF#refs/heads/}-$GITHUB_RUN_NUMBER"
+          FILE_NAME="liman_render-${GITHUB_REF#refs/heads/}-$GITHUB_RUN_NUMBER"
           curl -F "file=@main" "https://slack.com/api/files.upload?token=$SLACK_TOKEN&channels=go-release&filename=$FILE_NAME&pretty=1&initial_comment=$COMMIT" || echo
 
           
