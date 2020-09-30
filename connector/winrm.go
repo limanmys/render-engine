@@ -2,6 +2,7 @@ package connector
 
 import (
 	"strconv"
+	"strings"
 
 	"github.com/masterzen/winrm"
 )
@@ -30,8 +31,13 @@ func VerifyWinRM(username string, password string, ipAddress string, port string
 	params := winrm.DefaultParameters
 	params.TransportDecorator = func() winrm.Transporter { return &winrm.ClientNTLM{} }
 
-	_, err := winrm.NewClientWithParameters(endpoint, username, password, params)
+	client, err := winrm.NewClientWithParameters(endpoint, username, password, params)
 	if err != nil {
+		return false
+	}
+
+	stdout, _, _, _ := client.RunWithString("hostname", "")
+	if strings.TrimSpace(stdout) == "" {
 		return false
 	}
 	return true
