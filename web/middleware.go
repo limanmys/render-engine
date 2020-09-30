@@ -1,29 +1,34 @@
 package web
 
 import (
+	"errors"
 	"log"
 	"net/http"
-	"renderer/src/helpers"
-	"renderer/src/sqlite"
-	"strconv"
+	"github.com/limanmys/go/helpers"
+	"github.com/limanmys/go/sqlite"
 	"strings"
-
-	"github.com/gorilla/mux"
 )
 
-// CreateWebServer Create Web Server
-func CreateWebServer() {
-	port := 5454
-	log.Printf("Starting Server on %d\n", port)
-
-	r := mux.NewRouter()
-	r.HandleFunc("/", runExtensionHandler)
-	r.HandleFunc("/sendLog", extensionLogHandler)
-	r.HandleFunc("/backgroundJob", backgroundJobHandler)
-	r.HandleFunc("/externalAPI", externalAPIHandler)
-	r.Use(loggingMiddleware)
-	r.Use(permissionsMiddleware)
-	log.Fatal(http.ListenAndServe("127.0.0.1:"+strconv.Itoa(port), r))
+func extractRequestData(target []string, r *http.Request) (map[string]string, error) {
+	request := make(map[string]string)
+	target = append(target, "token")
+	for _, value := range target {
+		temp := r.FormValue(value)
+		if temp == "" {
+			return nil, errors.New(value + " is missing.")
+		}
+		if value == "token" {
+			//Try to get UserID from Token
+			userID := sqlite.GetUserIDFromToken(temp)
+			if userID == "" {
+				return nil, errors.New("token is not valid")
+			}
+			request["user_id"] = userID
+			continue
+		}
+		request[value] = temp
+	}
+	return request, nil
 }
 
 func permissionsMiddleware(next http.Handler) http.Handler {

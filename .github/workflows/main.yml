@@ -1,0 +1,31 @@
+name: Liman CI
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Getting Go Binaries
+        uses: actions/setup-go@v2
+        with:
+          go-version: '1.15'
+      - name: Test
+        run: |
+          go test -v ./...
+      - name: Build
+        run: |
+          go build main.go
+      - name: Calculate HASH
+        run: |
+          sha256sum main
+      - name: Publish
+        env:
+          SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
+        run: |
+          DEBIAN_FRONTEND=noninteractive sudo apt install jq -yyq 1>/dev/null 2>/dev/null
+          COMMIT="${GITHUB_REF#refs/heads/} : "
+          COMMIT+=`git --git-dir=.git log -1 --pretty=%B`
+          COMMIT=`echo $COMMIT | jq -SrR @uri`
+          FILE_NAME="liman_render-${GITHUB_REF#refs/heads/}-$GITHUB_RUN_NUMBER"
+          curl -F "file=@main" "https://slack.com/api/files.upload?token=$SLACK_TOKEN&channels=go-release&filename=$FILE_NAME&pretty=1&initial_comment=$COMMIT" || echo

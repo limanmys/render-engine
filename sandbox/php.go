@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"os"
-	"renderer/src/sqlite"
+	"github.com/limanmys/go/sqlite"
 	"strings"
 
 	"github.com/mervick/aes-everywhere/go/aes256"
@@ -16,6 +16,14 @@ func GeneratePHPCommand(targetFunction string, userID string, extensionID string
 	combinerPath := "/liman/sandbox/php/index.php"
 	server, extension, settings := sqlite.GetUserData(serverID, extensionID, userID)
 	user := sqlite.GetUser(userID)
+	clientUsername, clientPassword, _, serverKey := sqlite.GetServerKey(userID, serverID)
+
+	if clientUsername != "" && clientPassword != "" {
+		settings["clientUsername"] = clientUsername
+		settings["clientPassword"] = clientPassword
+	}
+
+	result["key_type"] = serverKey.Type
 
 	b, _ := json.Marshal(server)
 	result["server"] = string(b)

@@ -1,8 +1,11 @@
 package helpers
 
 import (
+	"bytes"
+	"fmt"
 	"regexp"
 	"strings"
+	"unicode/utf16"
 )
 
 // StringBetween Get String Between
@@ -74,4 +77,16 @@ func UniqueStrings(arr []string) []string {
 func IsValidUUID(uuid string) bool {
 	r := regexp.MustCompile("^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-4[a-fA-F0-9]{3}-[8|9|aA|bB][a-fA-F0-9]{3}-[a-fA-F0-9]{12}$")
 	return r.MatchString(uuid)
+}
+
+//EncodeMessageUTF16 EncodeMessageUTF16
+func EncodeMessageUTF16(message string) string {
+	runeByte := []rune(message)
+	encodedByte := utf16.Encode(runeByte)
+	var buf bytes.Buffer
+	defer buf.Reset()
+	for _, num := range encodedByte {
+		buf.WriteString(fmt.Sprintf("%04X", num))
+	}
+	return buf.String()
 }

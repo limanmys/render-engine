@@ -5,11 +5,12 @@ import (
 	"errors"
 	"net/http"
 	"os/exec"
-	"renderer/src/helpers"
-	"renderer/src/sandbox"
-	"renderer/src/sqlite"
 	"strconv"
 	"strings"
+
+	"github.com/limanmys/go/helpers"
+	"github.com/limanmys/go/sandbox"
+	"github.com/limanmys/go/sqlite"
 
 	"github.com/google/uuid"
 )
@@ -112,6 +113,23 @@ func runExtensionHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(403)
 		_, _ = w.Write([]byte(err.Error()))
 		return
+	}
+
+	extensionObj := sqlite.GetExtension(parsedRequest.ExtensionID)
+
+	if extensionObj.Status == "0" {
+		w.WriteHeader(403)
+		_, _ = w.Write([]byte("Eklenti şu an güncelleniyor, lütfen birazdan tekrar deneyin."))
+		return
+	}
+
+	if extensionObj.RequireKey == "true" {
+		_, _, _, serverKey := sqlite.GetServerKey(parsedRequest.UserID, parsedRequest.ServerID)
+		if serverKey.Type == "" {
+			w.WriteHeader(403)
+			_, _ = w.Write([]byte("Bu eklentiyi kullanabilmek için bir anahtara ihtiyacınız var, lütfen kasa üzerinden bir anahtar ekleyin."))
+			return
+		}
 	}
 
 	command := sandbox.GeneratePHPCommand(parsedRequest.Target, parsedRequest.UserID, parsedRequest.ExtensionID, parsedRequest.ServerID, parsedRequest.RequestData, parsedRequest.Token, parsedRequest.BaseURL, parsedRequest.Locale, parsedRequest.LogObject)
