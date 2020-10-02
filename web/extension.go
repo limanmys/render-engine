@@ -3,7 +3,6 @@ package web
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
 	"os/exec"
 	"strconv"
@@ -136,7 +135,7 @@ func runExtensionHandler(w http.ResponseWriter, r *http.Request) {
 	command := sandbox.GeneratePHPCommand(parsedRequest.Target, parsedRequest.UserID, parsedRequest.ExtensionID, parsedRequest.ServerID, parsedRequest.RequestData, parsedRequest.Token, parsedRequest.BaseURL, parsedRequest.Locale, parsedRequest.LogObject)
 
 	sandbox.WriteRegularLog(parsedRequest.LogObject)
-	fmt.Println(command)
+
 	output := executeCommand(command)
 	var objmap map[string]json.RawMessage
 	err = json.Unmarshal([]byte(output), &objmap)
