@@ -10,4 +10,5 @@ type AccessToken struct {
 	Token      string `json:"token"`
 	CreatedAt  string `json:"created_at"`
 	UpdatedAt  string `json:"updated_at"`
+	IPRange    string `json:"ip_range"`
 }

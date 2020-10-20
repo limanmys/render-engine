@@ -145,7 +145,7 @@ func getAccessToken(token string) (models.AccessToken, error) {
 	}
 	obj := models.AccessToken{}
 	rows.Next()
-	rows.Scan(&obj.ID, &obj.Name, &obj.UserID, &obj.LastUsedAt, &obj.LastUsedIP, &obj.Token, &obj.CreatedAt, &obj.UpdatedAt)
+	rows.Scan(&obj.ID, &obj.Name, &obj.UserID, &obj.LastUsedAt, &obj.LastUsedIP, &obj.Token, &obj.CreatedAt, &obj.UpdatedAt, &obj.IPRange)
 	rows.Close()
 	return obj, nil
 }
