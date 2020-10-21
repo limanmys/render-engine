@@ -132,7 +132,12 @@ func runExtensionHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	command := sandbox.GeneratePHPCommand(parsedRequest.Target, parsedRequest.UserID, parsedRequest.ExtensionID, parsedRequest.ServerID, parsedRequest.RequestData, parsedRequest.Token, parsedRequest.BaseURL, parsedRequest.Locale, parsedRequest.LogObject)
+	command, err := sandbox.GeneratePHPCommand(parsedRequest.Target, parsedRequest.UserID, parsedRequest.ExtensionID, parsedRequest.ServerID, parsedRequest.RequestData, parsedRequest.Token, parsedRequest.BaseURL, parsedRequest.Locale, parsedRequest.LogObject)
+	if err != nil {
+		w.WriteHeader(201)
+		_, _ = w.Write([]byte(`{"message":"` + err.Error() + `","status":"201"}`))
+		return
+	}
 
 	sandbox.WriteRegularLog(parsedRequest.LogObject)
 
@@ -164,7 +169,12 @@ func externalAPIHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	command := sandbox.GeneratePHPCommand(parsedRequest.Target, parsedRequest.UserID, parsedRequest.ExtensionID, parsedRequest.ServerID, parsedRequest.RequestData, parsedRequest.Token, parsedRequest.BaseURL, parsedRequest.Locale, parsedRequest.LogObject)
+	command, err := sandbox.GeneratePHPCommand(parsedRequest.Target, parsedRequest.UserID, parsedRequest.ExtensionID, parsedRequest.ServerID, parsedRequest.RequestData, parsedRequest.Token, parsedRequest.BaseURL, parsedRequest.Locale, parsedRequest.LogObject)
+	if err != nil {
+		w.WriteHeader(201)
+		_, _ = w.Write([]byte(`{"message":"` + err.Error() + `","status":"201"}`))
+		return
+	}
 
 	sandbox.WriteRegularLog(parsedRequest.LogObject)
 
@@ -195,7 +205,13 @@ func backgroundJobHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	parsedRequest.LogObject.Display = "false"
-	command := sandbox.GeneratePHPCommand(parsedRequest.Target, parsedRequest.UserID, parsedRequest.ExtensionID, parsedRequest.ServerID, parsedRequest.RequestData, parsedRequest.Token, parsedRequest.BaseURL, parsedRequest.Locale, parsedRequest.LogObject)
+	command, err := sandbox.GeneratePHPCommand(parsedRequest.Target, parsedRequest.UserID, parsedRequest.ExtensionID, parsedRequest.ServerID, parsedRequest.RequestData, parsedRequest.Token, parsedRequest.BaseURL, parsedRequest.Locale, parsedRequest.LogObject)
+	if err != nil {
+		w.WriteHeader(201)
+		_, _ = w.Write([]byte(`{"message":"` + err.Error() + `","status":"201"}`))
+		return
+	}
+
 	sandbox.WriteRegularLog(parsedRequest.LogObject)
 	go executeCommand(command)
 

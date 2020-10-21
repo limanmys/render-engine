@@ -2,16 +2,19 @@ package sandbox
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
+	"github.com/limanmys/go/helpers"
+	"github.com/limanmys/go/sqlite"
 	"io/ioutil"
 	"os"
-	"github.com/limanmys/go/sqlite"
 	"strings"
 
 	"github.com/mervick/aes-everywhere/go/aes256"
 )
 
 // GeneratePHPCommand generate command
-func GeneratePHPCommand(targetFunction string, userID string, extensionID string, serverID string, requestData map[string]string, token string, baseURL string, locale string, logObject RegularLog) string {
+func GeneratePHPCommand(targetFunction string, userID string, extensionID string, serverID string, requestData map[string]string, token string, baseURL string, locale string, logObject RegularLog) (string, error) {
 	result := make(map[string]string)
 	combinerPath := "/liman/sandbox/php/index.php"
 	server, extension, settings := sqlite.GetUserData(serverID, extensionID, userID)
@@ -64,8 +67,30 @@ func GeneratePHPCommand(targetFunction string, userID string, extensionID string
 
 	result["publicPath"] = baseURL + "/eklenti/" + extension.ID + "/public/"
 
-	b, _ = json.Marshal(sqlite.GetFuncPermissions(userID))
+	tmpPermissions := sqlite.GetFuncPermissions(userID)
+	b, _ = json.Marshal(tmpPermissions)
 	result["permissions"] = string(b)
+
+	extensionJSONFile, err := ioutil.ReadFile("/liman/extensions/" + strings.ToLower(extension.Name) + "/db.json")
+	if err != nil {
+		return "", errors.New(err.Error())
+	}
+
+	jsonMap := make(map[string][]map[string]string)
+
+	_ = json.Unmarshal(extensionJSONFile, &jsonMap)
+
+	requiredList := []string{}
+	for i := 0; i < len(jsonMap["functions"]); i++ {
+		if jsonMap["functions"][i]["isActive"] == "true" {
+			requiredList = append(requiredList, jsonMap["functions"][i]["name"])
+		}
+	}
+
+	fmt.Printf("%v %v\n", !helpers.Contains(tmpPermissions, targetFunction), helpers.Contains(requiredList, targetFunction))
+	if user.Status != 1 && !helpers.Contains(tmpPermissions, targetFunction) && helpers.Contains(requiredList, targetFunction) {
+		return "", errors.New("Bu işlem için yetkiniz yok")
+	}
 
 	soPath := "/liman/extensions/" + strings.ToLower(extension.Name) + "/liman.so"
 	soCommand := ""
@@ -82,5 +107,17 @@ func GeneratePHPCommand(targetFunction string, userID string, extensionID string
 
 	command := "sudo runuser " + strings.Replace(extension.ID, "-", "", -1) + " -c 'timeout 30 /usr/bin/php " + soCommand + "-d display_errors=on " + combinerPath + " " + keyPath + " " + encryptedData + "'"
 
-	return command
+	return command, nil
+}
+
+func dumpMap(space string, m map[string]interface{}) {
+	for k, v := range m {
+		if mv, ok := v.(map[string]interface{}); ok {
+			fmt.Printf("{ \"%v\": \n", k)
+			dumpMap(space+"\t", mv)
+			fmt.Printf("}\n")
+		} else {
+			fmt.Printf("%v %v : %v\n", space, k, v)
+		}
+	}
 }
