@@ -29,6 +29,7 @@ func CreateWebServer() {
 
 	r.Use(loggingMiddleware)
 	r.Use(permissionsMiddleware)
+	log.Fatal(http.ListenAndServe("127.0.0.1:"+strconv.Itoa(port), r))
 
-	log.Fatal(http.ListenAndServeTLS("127.0.0.1:"+strconv.Itoa(port), "/liman/certs/liman.crt", "/liman/certs/liman.key", r))
+	//log.Fatal(http.ListenAndServeTLS("127.0.0.1:"+strconv.Itoa(port), "/liman/certs/liman.crt", "/liman/certs/liman.key", r))
 }
