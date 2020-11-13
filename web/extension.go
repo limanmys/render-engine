@@ -135,6 +135,7 @@ func runExtensionHandler(w http.ResponseWriter, r *http.Request) {
 	command, err := sandbox.GeneratePHPCommand(parsedRequest.Target, parsedRequest.UserID, parsedRequest.ExtensionID, parsedRequest.ServerID, parsedRequest.RequestData, parsedRequest.Token, parsedRequest.BaseURL, parsedRequest.Locale, parsedRequest.LogObject)
 	if err != nil {
 		w.WriteHeader(201)
+		w.Header().Set("Content-Type", "application/json")
 		_, _ = w.Write([]byte(`{"message":"` + err.Error() + `","status":201}`))
 		return
 	}
@@ -172,6 +173,7 @@ func externalAPIHandler(w http.ResponseWriter, r *http.Request) {
 	command, err := sandbox.GeneratePHPCommand(parsedRequest.Target, parsedRequest.UserID, parsedRequest.ExtensionID, parsedRequest.ServerID, parsedRequest.RequestData, parsedRequest.Token, parsedRequest.BaseURL, parsedRequest.Locale, parsedRequest.LogObject)
 	if err != nil {
 		w.WriteHeader(201)
+		w.Header().Set("Content-Type", "application/json")
 		_, _ = w.Write([]byte(`{"message":"` + err.Error() + `","status":201}`))
 		return
 	}
@@ -208,6 +210,7 @@ func backgroundJobHandler(w http.ResponseWriter, r *http.Request) {
 	command, err := sandbox.GeneratePHPCommand(parsedRequest.Target, parsedRequest.UserID, parsedRequest.ExtensionID, parsedRequest.ServerID, parsedRequest.RequestData, parsedRequest.Token, parsedRequest.BaseURL, parsedRequest.Locale, parsedRequest.LogObject)
 	if err != nil {
 		w.WriteHeader(201)
+		w.Header().Set("Content-Type", "application/json")
 		_, _ = w.Write([]byte(`{"message":"` + err.Error() + `","status":201}`))
 		return
 	}
