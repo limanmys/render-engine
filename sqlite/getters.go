@@ -23,7 +23,7 @@ func GetServer(serverID string) models.ServerModel {
 	rows, _ := db.Query("SELECT * FROM servers WHERE id=? LIMIT 1", serverID)
 	obj := models.ServerModel{}
 	rows.Next()
-	rows.Scan(&obj.ID, &obj.Name, &obj.ServerType, &obj.IPAddress, &obj.City, &obj.ControlPort, &obj.UserID, &obj.CreatedAt, &obj.UpdatedAt, &obj.Os, &obj.Enabled, &obj.KeyPort)
+	rows.Scan(&obj.ID, &obj.Name, &obj.Type, &obj.IPAddress, &obj.City, &obj.ControlPort, &obj.UserID, &obj.CreatedAt, &obj.UpdatedAt, &obj.Os, &obj.Enabled, &obj.KeyPort)
 	rows.Close()
 	return obj
 }

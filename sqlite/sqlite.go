@@ -34,7 +34,7 @@ func GetUserIDFromLimanToken(tokenID string) string {
 	return token.UserID
 }
 
-// InitDB inialize database
+// InitDB initialize database
 func InitDB() {
 	temp, err := sql.Open("sqlite3", "/liman/database/liman.sqlite?cache=shared&mode=rwc")
 	if err != nil {

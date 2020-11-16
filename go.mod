@@ -3,6 +3,7 @@ module github.com/limanmys/go
 go 1.15
 
 require (
+	github.com/go-pg/pg/v10 v10.6.2
 	github.com/google/uuid v1.1.2
 	github.com/gorilla/mux v1.8.0
 	github.com/hirochachacha/go-smb2 v1.0.2
@@ -12,6 +13,6 @@ require (
 	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
 	github.com/pkg/sftp v1.12.0
 	github.com/rgzr/sshtun v0.0.2
-	golang.org/x/crypto v0.0.0-20200820211705-5c72a883971a
+	golang.org/x/crypto v0.0.0-20201012173705-84dcc777aaee
 	golang.org/x/text v0.3.3
 )
