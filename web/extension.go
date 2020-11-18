@@ -9,8 +9,8 @@ import (
 	"strings"
 
 	"github.com/limanmys/go/helpers"
+	"github.com/limanmys/go/postgresql"
 	"github.com/limanmys/go/sandbox"
-	"github.com/limanmys/go/sqlite"
 
 	"github.com/google/uuid"
 )
@@ -41,12 +41,12 @@ func validateAndExtractRequest(r *http.Request) (parsedRequest, error) {
 	var userID string
 
 	if r.Header.Get("liman-token") != "" {
-		userID = sqlite.GetUserIDFromLimanToken(r.Header.Get("liman-token"))
+		userID = postgresql.GetUserIDFromLimanToken(r.Header.Get("liman-token"))
 		if userID == "" {
 			return parsedRequest{}, errors.New("Not Authorized1")
 		}
 	} else {
-		userID = sqlite.GetUserIDFromToken(token)
+		userID = postgresql.GetUserIDFromToken(token)
 		if userID == "" {
 			return parsedRequest{}, errors.New("Not Authorized2")
 		}
@@ -57,7 +57,7 @@ func validateAndExtractRequest(r *http.Request) (parsedRequest, error) {
 	var extensionID string
 
 	if r.FormValue("widget_id") != "" {
-		widget := sqlite.GetWidget(r.FormValue("widget_id"))
+		widget := postgresql.GetWidget(r.FormValue("widget_id"))
 		if widget.Name == "" {
 			return parsedRequest{}, errors.New("Widget Bulunamadı")
 		}
@@ -70,7 +70,7 @@ func validateAndExtractRequest(r *http.Request) (parsedRequest, error) {
 		extensionID = r.FormValue("extension_id")
 	}
 	if helpers.IsValidUUID(extensionID) == false {
-		extensionID = sqlite.GetExtensionFromName(extensionID).ID
+		extensionID = postgresql.GetExtensionFromName(extensionID).ID
 	}
 	if target == "" || serverID == "" || extensionID == "" {
 		return parsedRequest{}, errors.New("Not Authorized3")
@@ -115,7 +115,7 @@ func runExtensionHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	extensionObj := sqlite.GetExtension(parsedRequest.ExtensionID)
+	extensionObj := postgresql.GetExtension(parsedRequest.ExtensionID)
 
 	if extensionObj.Status == "0" {
 		w.WriteHeader(403)
@@ -124,7 +124,7 @@ func runExtensionHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if extensionObj.RequireKey == "true" {
-		_, _, _, serverKey := sqlite.GetServerKey(parsedRequest.UserID, parsedRequest.ServerID)
+		_, _, _, serverKey := postgresql.GetServerKey(parsedRequest.UserID, parsedRequest.ServerID)
 		if serverKey.Type == "" {
 			w.WriteHeader(403)
 			_, _ = w.Write([]byte("Bu eklentiyi kullanabilmek için bir anahtara ihtiyacınız var, lütfen kasa üzerinden bir anahtar ekleyin."))
@@ -231,7 +231,7 @@ func extensionLogHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	var userID string
 
-	userID = sqlite.GetUserIDFromToken(token)
+	userID = postgresql.GetUserIDFromToken(token)
 	if userID == "" {
 		w.WriteHeader(403)
 		_, _ = w.Write([]byte("nope2"))

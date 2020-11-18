@@ -12,8 +12,8 @@ type UserModel struct {
 	LastLoginIP   string   `json:"last_login_ip"`
 	CreatedAt     string   `json:"created_at"`
 	UpdatedAt     string   `json:"updated_at"`
-	ForceChange   int      `json:"forcechange"`
-	ObjectGUID    string   `json:"objectguid"`
+	ForceChange   bool     `json:"forcechange" pg:"forceChange"`
+	ObjectGUID    string   `json:"objectguid" pg:"objectguid"`
 	AuthType      string   `json:"auth_type"`
 	tableName     struct{} `pg:"users"`
 }

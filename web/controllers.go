@@ -2,13 +2,13 @@ package web
 
 import (
 	"encoding/base64"
-	"fmt"
-	"github.com/limanmys/go/connector"
-	"github.com/limanmys/go/sqlite"
 	"net/http"
 	"path/filepath"
 	"strconv"
 	"time"
+
+	"github.com/limanmys/go/connector"
+	"github.com/limanmys/go/postgresql"
 )
 
 func putFileHandler(w http.ResponseWriter, r *http.Request) {
@@ -17,12 +17,11 @@ func putFileHandler(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		w.WriteHeader(403)
-		fmt.Println(err.Error())
 		_, _ = w.Write([]byte(err.Error()))
 		return
 	}
 
-	server := sqlite.GetServer(request["server_id"])
+	server := postgresql.GetServer(request["server_id"])
 
 	val, err := connector.GetConnection(request["user_id"], request["server_id"], server.IPAddress)
 
@@ -59,7 +58,7 @@ func getFileHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	server := sqlite.GetServer(request["server_id"])
+	server := postgresql.GetServer(request["server_id"])
 
 	val, err := connector.GetConnection(request["user_id"], request["server_id"], server.IPAddress)
 
@@ -95,7 +94,7 @@ func runCommandHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	server := sqlite.GetServer(request["server_id"])
+	server := postgresql.GetServer(request["server_id"])
 
 	val, err := connector.GetConnection(request["user_id"], request["server_id"], server.IPAddress)
 
@@ -205,17 +204,15 @@ func runScriptHandler(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		w.WriteHeader(403)
-		fmt.Println(err.Error())
 		_, _ = w.Write([]byte(err.Error()))
 		return
 	}
-	server := sqlite.GetServer(request["server_id"])
+	server := postgresql.GetServer(request["server_id"])
 
 	val, err := connector.GetConnection(request["user_id"], request["server_id"], server.IPAddress)
 
 	if err != nil {
 		w.WriteHeader(403)
-		fmt.Println(err.Error())
 		_, _ = w.Write([]byte(err.Error()))
 		return
 	}
@@ -242,7 +239,7 @@ func runScriptHandler(w http.ResponseWriter, r *http.Request) {
 	if server.Os == "linux" {
 		val.Run("chmod +x " + remotePath)
 		if request["root"] == "yes" {
-			_, password, _, keyObj := sqlite.GetServerKey(request["user_id"], request["server_id"])
+			_, password, _, keyObj := postgresql.GetServerKey(request["user_id"], request["server_id"])
 			if keyObj.Type == "ssh" {
 				encoded := base64.StdEncoding.EncodeToString([]byte(password))
 				sudo := "echo " + encoded + " | base64 -d | sudo -S -p ' ' id 2>/dev/null 1>/dev/null; sudo "

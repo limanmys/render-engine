@@ -10,7 +10,7 @@ type ExtensionModel struct {
 	CreatedAt  string   `json:"created_at"`
 	UpdatedAt  string   `json:"updated_at"`
 	Order      int      `json:"order"`
-	SslPorts   string   `json:"sslPorts"`
+	SslPorts   string   `json:"sslPorts" pg:"sslPorts"`
 	Issuer     string   `json:"issuer"`
 	Language   string   `json:"language"`
 	Support    string   `json:"support"`
