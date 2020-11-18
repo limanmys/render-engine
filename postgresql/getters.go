@@ -2,6 +2,7 @@ package postgresql
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/limanmys/go/helpers"
 	"github.com/limanmys/go/models"
@@ -58,7 +59,7 @@ func GetObjPermissions(userID string) []string {
 	}
 
 	permissions = append(permissions, getObjPermissionsFromMorphID(userID)...)
-
+	fmt.Println(permissions)
 	permissions = helpers.UniqueStrings(permissions)
 	return permissions
 }
@@ -77,7 +78,7 @@ func getObjPermissionsFromMorphID(morphID string) []string {
 	var permission []models.Permission
 	var permissions []string
 	_ = db.Model(&permission).Where("morph_id=? and not type='function'", morphID).ForEach(func(permission models.Permission) error {
-		permissions = append(permissions, permission.ID)
+		permissions = append(permissions, permission.Value)
 		return nil
 	})
 	return permissions
