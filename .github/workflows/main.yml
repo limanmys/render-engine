@@ -27,11 +27,9 @@ jobs:
           COMMIT="${GITHUB_REF#refs/heads/} : "
           COMMIT+=`git --git-dir=.git log -1 --pretty=%B`
           COMMIT=`echo $COMMIT | jq -SrR @uri`
-          FILE_NAME="liman_render-${GITHUB_REF#refs/heads/}-$GITHUB_RUN_NUMBER"
-          curl -F "file=@main" "https://slack.com/api/files.upload?token=$SLACK_TOKEN&channels=go-release&filename=$FILE_NAME&pretty=1&initial_comment=$COMMIT" || echo
           git config --global user.name 'limanmys'
           git config --global user.email 'limanmys@users.noreply.github.com'
           mv main liman_render
           git add liman_render
-          git commit -am "Automatic Build"
+          git commit -am "Automatic Build :  $COMMIT"
           git push
