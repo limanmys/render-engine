@@ -4,8 +4,9 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/limanmys/go/helpers"
 	"time"
+
+	"github.com/limanmys/go/helpers"
 )
 
 //RegularLog regular extension log.
@@ -33,7 +34,7 @@ func WriteRegularLog(logObject RegularLog) {
 	now := time.Now().Format("2006-01-02 15:04:05")
 	data := fmt.Sprintf("[%s] liman_render: EXTENSION_RENDER_PAGE %s\n", now, string(b))
 	data = base64.StdEncoding.EncodeToString([]byte(data))
-	helpers.ExecuteCommand("echo " + data + "| base64 --decode | tee --append /liman/logs/liman.log")
+	helpers.ExecuteCommand("echo " + data + "| base64 --decode | tee --append " + helpers.LogsPath)
 }
 
 //WriteSpecialLog Write Special extension log object.
@@ -42,5 +43,5 @@ func WriteSpecialLog(logObject SpecialLog) {
 	now := time.Now().Format("2006-01-02 15:04:05")
 	data := fmt.Sprintf("[%s] liman_render: %s\n", now, string(b))
 	data = base64.StdEncoding.EncodeToString([]byte(data))
-	helpers.ExecuteCommand("echo " + data + "| base64 --decode | tee --append /liman/logs/extension.log")
+	helpers.ExecuteCommand("echo " + data + "| base64 --decode | tee --append " + helpers.ExtensionLogsPath)
 }

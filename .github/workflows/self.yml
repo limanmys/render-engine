@@ -1,0 +1,71 @@
+name: Liman CI
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Getting Go Binaries
+        uses: actions/setup-go@v2
+        with:
+          go-version: '1.15'
+      - name: Getting Liman' PHP Sandbox
+        uses: actions/checkout@v2
+        with:
+          repository: limanmys/php-sandbox
+          path: package/usr/share/liman-go/sandbox/php
+          token: ${{ secrets.CI_TOKEN }}
+          ref: "1.5-dev"
+      - name: Test
+        run: |
+          go test -v ./...
+      - name: Build
+        run: |
+          go build main.go
+      - name: Calculate HASH
+        run: |
+          sha256sum main
+      - name: Publish
+        env:
+          SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
+        run: |
+          DEBIAN_FRONTEND=noninteractive sudo apt install jq -yyq 1>/dev/null 2>/dev/null
+          COMMIT="${GITHUB_REF#refs/heads/} : "
+          COMMIT+=`git --git-dir=.git log -1 --pretty=%B`
+          COMMIT=`echo $COMMIT | jq -SrR @uri`
+          FILE_NAME="liman_go-${GITHUB_REF#refs/heads/}-$GITHUB_RUN_NUMBER.deb"
+
+          rm -rf package/usr/share/liman-go/sandbox/php/.git
+          mkdir -p package/usr/share/liman-go/{keys,certs,extensions,logs}
+          mkdir package/DEBIAN
+          mv main package/usr/share/liman-go/liman-go
+          mv sample.conf package/usr/share/liman-go/liman-go/service.conf
+          cd package
+          touch DEBIAN/md5sums
+          touch DEBIAN/md5sums
+          touch DEBIAN/control
+
+          find . -type f ! -regex '.*.hg.*' ! -regex '.*?debian-binary.*' ! -regex '.*?DEBIAN.*' -printf '%P ' | xargs md5sum  1>/dev/null 2>/dev/null || true
+          find . \( -name ".git" -o -name ".gitignore" -o -name ".gitmodules" -o -name ".gitattributes" \) -exec rm -rf -- {} + 1>/dev/null 2>/dev/null || true
+          
+          chmod 775 DEBIAN/preinst
+          chmod 775 DEBIAN/postinst
+
+          echo """Package: liman-go
+          Version: $GITHUB_RUN_NUMBER
+          Installed-Size: 77892
+          Maintainer: Mert CELEN <mcelen@havelsan.com.tr>
+          Section: admin
+          Date : $DATE
+          Architecture: amd64
+          Priority: important
+          Description: Liman MYS' Go Service
+          Depends: 
+          """ > DEBIAN/control
+          cd ../
+
+          dpkg-deb -Zgzip --build package
+
+          curl -F "file=@package.deb" "https://slack.com/api/files.upload?token=$SLACK_TOKEN&channels=liman-go-self&filename=$FILE_NAME&pretty=1&initial_comment=$COMMIT" || echo
+          

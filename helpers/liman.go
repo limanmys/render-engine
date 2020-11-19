@@ -1,56 +1,68 @@
 package helpers
 
-import "fmt"
+import (
+	"fmt"
+	"os"
 
-// ReadDataFromLiman Retrieve data from liman
-func ReadDataFromLiman() {
-	readAppKey()
-	readPGData()
-}
+	"github.com/spf13/viper"
+)
 
-func readAppKey() {
-	output, err := ExecuteCommand("cat /liman/server/.env | grep APP_KEY")
+// ReadConfiguration Retrieve data from liman
+func ReadConfiguration() {
+	customPath := os.Getenv("LIMAN_CONFIG")
+	if customPath != "" {
+		ConfigFilePath = customPath
+	}
+
+	viper.SetConfigFile(ConfigFilePath)
+	viper.SetConfigType("env")
+
+	err := viper.ReadInConfig()
 	if err != nil {
-		fmt.Println("Liman Sifreleme Anahtari Okunamadi!")
-		Abort(err.Error())
+		fmt.Printf("Konfigürasyon dosyası okunamadı!\n%v\n", err.Error())
+		os.Exit(1)
+		return
 	}
-	AppKey = StringAfter(output, "APP_KEY=")
+
+	// Set All Values to Variables
+	AppKey = viper.GetString("APP_KEY")
+
+	viper.SetDefault("DB_HOST", "127.0.0.1")
+	DBHost = viper.GetString("DB_HOST")
+
+	viper.SetDefault("DB_PORT", "5432")
+	DBPort = viper.GetString("DB_PORT")
+
+	viper.SetDefault("DB_DATABASE", "liman")
+	DBName = viper.GetString("DB_DATABASE")
+
+	viper.SetDefault("DB_USERNAME", "liman")
+	DBUsername = viper.GetString("DB_USERNAME")
+	DBPassword = viper.GetString("DB_PASSWORD")
+
+	viper.SetDefault("LIMAN_RESTRICTED", false)
+	RestrictedMode = viper.GetBool("LIMAN_RESTRICTED")
+
+	viper.SetDefault("LOG_EXTENSION_PATH", "/liman/logs/extension.log")
+	ExtensionLogsPath = viper.GetString("LOG_EXTENSION_PATH")
+
+	viper.SetDefault("LOG_PATH", "/liman/logs/liman.log")
+	LogsPath = viper.GetString("LOG_PATH")
+
+	viper.SetDefault("SANDBOX_PATH", "/liman/sandbox/")
+	SandboxPath = viper.GetString("SANDBOX_PATH")
+
+	viper.SetDefault("KEYS_PATH", "/liman/keys/")
+	KeysPath = viper.GetString("KEYS_PATH")
+
+	viper.SetDefault("CERTS_PATH", "/liman/certs/")
+	CertsPath = viper.GetString("CERTS_PATH")
+
+	viper.SetDefault("EXTENSIONS_PATH", "/liman/extensions/")
+	ExtensionsPath = viper.GetString("EXTENSIONS_PATH")
+
 }
 
-func readPGData() {
-	output, _ := ExecuteCommand("cat /liman/server/.env | grep DB_HOST")
-
-	DBHost = StringAfter(output, "DB_HOST=")
-
-	if DBHost == "" {
-		DBHost = "127.0.0.1"
-	}
-
-	output, _ = ExecuteCommand("cat /liman/server/.env | grep DB_PORT")
-
-	DBPort = StringAfter(output, "DB_PORT=")
-
-	if DBPort == "" {
-		DBPort = "5432"
-	}
-
-	output, _ = ExecuteCommand("cat /liman/server/.env | grep DB_DATABASE")
-
-	DBName = StringAfter(output, "DB_DATABASE=")
-
-	if DBName == "" {
-		DBName = "liman"
-	}
-
-	output, _ = ExecuteCommand("cat /liman/server/.env | grep DB_USERNAME")
-
-	DBUsername = StringAfter(output, "DB_USERNAME=")
-
-	if DBUsername == "" {
-		DBUsername = "liman"
-	}
-
-	output, _ = ExecuteCommand("cat /liman/server/.env | grep DB_PASSWORD")
-
-	DBPassword = StringAfter(output, "DB_PASSWORD=")
+func CheckRestrictedMode() bool {
+	return RestrictedMode
 }

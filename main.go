@@ -13,7 +13,7 @@ func main() {
 
 	connector.ActiveTunnels = make(map[string]connector.Tunnel)
 
-	helpers.ReadDataFromLiman()
+	helpers.ReadConfiguration()
 
 	postgresql.InitDB()
 

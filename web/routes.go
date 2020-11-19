@@ -1,10 +1,12 @@
 package web
 
 import (
-	"github.com/gorilla/mux"
 	"log"
 	"net/http"
 	"strconv"
+
+	"github.com/gorilla/mux"
+	"github.com/limanmys/go/helpers"
 )
 
 // CreateWebServer Create Web Server
@@ -29,5 +31,5 @@ func CreateWebServer() {
 	r.Use(loggingMiddleware)
 	r.Use(permissionsMiddleware)
 
-	log.Fatal(http.ListenAndServeTLS("127.0.0.1:"+strconv.Itoa(port), "/liman/certs/liman.crt", "/liman/certs/liman.key", r))
+	log.Fatal(http.ListenAndServeTLS("127.0.0.1:"+strconv.Itoa(port), helpers.CertsPath+"liman.crt", helpers.CertsPath+"liman.key", r))
 }

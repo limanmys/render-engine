@@ -4,7 +4,6 @@ import (
 	"errors"
 	"log"
 	"net/http"
-	"strings"
 
 	"github.com/limanmys/go/helpers"
 	"github.com/limanmys/go/postgresql"
@@ -61,7 +60,7 @@ func permissionsMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		if strings.TrimSpace(executeCommand("cat /liman/server/.env | grep 'LIMAN_RESTRICTED=true' >/dev/null && echo 1 || echo 0")) == "1" {
+		if helpers.CheckRestrictedMode() {
 			next.ServeHTTP(w, r)
 			return
 		}

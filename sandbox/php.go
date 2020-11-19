@@ -17,7 +17,7 @@ import (
 // GeneratePHPCommand generate command
 func GeneratePHPCommand(targetFunction string, userID string, extensionID string, serverID string, requestData map[string]string, token string, baseURL string, locale string, logObject RegularLog) (string, error) {
 	result := make(map[string]string)
-	combinerPath := "/liman/sandbox/php/index.php"
+	combinerPath := helpers.SandboxPath + "php/index.php"
 	server, extension, settings := postgresql.GetUserData(serverID, extensionID, userID)
 	user := postgresql.GetUser(userID)
 	clientUsername, clientPassword, _, serverKey := postgresql.GetServerKey(userID, serverID)
@@ -43,7 +43,7 @@ func GeneratePHPCommand(targetFunction string, userID string, extensionID string
 
 	b, _ = json.Marshal(result)
 
-	result["functionsPath"] = "/liman/extensions/" + strings.ToLower(extension.Name) + "/views/functions.php"
+	result["functionsPath"] = helpers.ExtensionsPath + strings.ToLower(extension.Name) + "/views/functions.php"
 
 	result["function"] = targetFunction
 
@@ -72,7 +72,7 @@ func GeneratePHPCommand(targetFunction string, userID string, extensionID string
 	b, _ = json.Marshal(tmpPermissions)
 	result["permissions"] = string(b)
 
-	extensionJSONFile, err := ioutil.ReadFile("/liman/extensions/" + strings.ToLower(extension.Name) + "/db.json")
+	extensionJSONFile, err := ioutil.ReadFile(helpers.ExtensionsPath + strings.ToLower(extension.Name) + "/db.json")
 	if err != nil {
 		return "", errors.New(err.Error())
 	}
@@ -92,13 +92,13 @@ func GeneratePHPCommand(targetFunction string, userID string, extensionID string
 		return "", errors.New("Bu işlem için yetkiniz yok")
 	}
 
-	soPath := "/liman/extensions/" + strings.ToLower(extension.Name) + "/liman.so"
+	soPath := helpers.ExtensionsPath + strings.ToLower(extension.Name) + "/liman.so"
 	soCommand := ""
 	if _, err := os.Stat(soPath); err == nil {
 		soCommand = "-dextension=" + soPath + " "
 	}
 
-	keyPath := "/liman/keys/" + extension.ID
+	keyPath := helpers.KeysPath + extension.ID
 	content, _ := ioutil.ReadFile(keyPath)
 
 	b, _ = json.Marshal(result)
