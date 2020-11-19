@@ -42,15 +42,12 @@ jobs:
           mv main package/usr/share/liman-go/liman-go
           mv sample.conf package/usr/share/liman-go/service.conf
           cd package
-          touch DEBIAN/md5sums
-          touch DEBIAN/md5sums
-          touch DEBIAN/control
 
+          touch DEBIAN/{md5sums,control,preinst,postinst}
           find . -type f ! -regex '.*.hg.*' ! -regex '.*?debian-binary.*' ! -regex '.*?DEBIAN.*' -printf '%P ' | xargs md5sum  1>/dev/null 2>/dev/null || true
           find . \( -name ".git" -o -name ".gitignore" -o -name ".gitmodules" -o -name ".gitattributes" \) -exec rm -rf -- {} + 1>/dev/null 2>/dev/null || true
           
-          chmod 775 DEBIAN/preinst
-          chmod 775 DEBIAN/postinst
+          chmod 775 DEBIAN/{preinst,postinst}
 
           echo """Package: liman-go
           Version: $GITHUB_RUN_NUMBER
