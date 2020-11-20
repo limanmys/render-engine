@@ -43,6 +43,9 @@ func ReadConfiguration() {
 	viper.SetDefault("LIMAN_RESTRICTED", false)
 	RestrictedMode = viper.GetBool("LIMAN_RESTRICTED")
 
+	viper.SetDefault("INTERNAL_ONLY", true)
+	ListenInternally = viper.GetBool("INTERNAL_ONLY")
+
 	viper.SetDefault("LOG_EXTENSION_PATH", "/liman/logs/extension.log")
 	ExtensionLogsPath = viper.GetString("LOG_EXTENSION_PATH")
 
@@ -61,6 +64,7 @@ func ReadConfiguration() {
 	viper.SetDefault("EXTENSIONS_PATH", "/liman/extensions/")
 	ExtensionsPath = viper.GetString("EXTENSIONS_PATH")
 
+	CurrentIP = viper.GetString("CURRENT_IP")
 }
 
 func CheckRestrictedMode() bool {

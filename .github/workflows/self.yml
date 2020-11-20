@@ -40,7 +40,7 @@ jobs:
           mkdir -p package/usr/share/liman-go/{keys,certs,extensions,logs}
           mkdir package/DEBIAN
           mv main package/usr/share/liman-go/liman-go
-          mv sample.conf package/usr/share/liman-go/service.conf
+          mv sample.conf package/usr/share/liman-go/.service.conf.sample
           cd package
 
           touch DEBIAN/{md5sums,control,preinst,postinst}

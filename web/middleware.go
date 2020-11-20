@@ -38,6 +38,14 @@ func permissionsMiddleware(next http.Handler) http.Handler {
 
 		var userID, extensionID, serverID string
 
+		if r.Header.Get("liman-system") != "" {
+			if helpers.AuthKey != r.Header.Get("liman-system") {
+				w.WriteHeader(403)
+				_, _ = w.Write([]byte("nope8"))
+				return
+			}
+		}
+
 		if r.Header.Get("liman-token") != "" {
 			userID = postgresql.GetUserIDFromLimanToken(r.Header.Get("liman-token"))
 			if userID == "" {

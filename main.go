@@ -17,6 +17,8 @@ func main() {
 
 	postgresql.InitDB()
 
+	postgresql.StoreEngineData()
+
 	go recycle.Start()
 
 	web.CreateWebServer()

@@ -12,7 +12,6 @@ import (
 // CreateWebServer Create Web Server
 func CreateWebServer() {
 	port := 5454
-	log.Printf("Starting Server on %d\n", port)
 
 	r := mux.NewRouter()
 	r.HandleFunc("/", runExtensionHandler)
@@ -27,9 +26,22 @@ func CreateWebServer() {
 	r.HandleFunc("/openTunnel", openTunnelHandler)
 	r.HandleFunc("/keepTunnelAlive", keepTunnelAliveHandler)
 	r.HandleFunc("/verify", verifyHandler)
+	r.HandleFunc("/dns", dnsHandler)
+	r.HandleFunc("/userAdd", userAddHandler)
+	r.HandleFunc("/userRemove", userRemoveHandler)
+	r.HandleFunc("/fixPermissions", permissionFixHandler)
+	r.HandleFunc("/certificateAdd", certificateAddHandler)
+	r.HandleFunc("/certificateRemove", certificateRemoveHandler)
+	r.HandleFunc("/fixExtensionKeysPermission", fixExtensionKeyHandler)
 
 	r.Use(loggingMiddleware)
 	r.Use(permissionsMiddleware)
 
-	log.Fatal(http.ListenAndServeTLS("127.0.0.1:"+strconv.Itoa(port), helpers.CertsPath+"liman.crt", helpers.CertsPath+"liman.key", r))
+	targetHost := "127.0.0.1"
+
+	if !helpers.ListenInternally {
+		targetHost = "0.0.0.0"
+	}
+	log.Printf("Starting Server on %v:%v\n", targetHost, port)
+	log.Fatal(http.ListenAndServeTLS(targetHost+":"+strconv.Itoa(port), helpers.CertsPath+"liman.crt", helpers.CertsPath+"liman.key", r))
 }

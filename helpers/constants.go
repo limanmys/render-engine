@@ -41,3 +41,12 @@ var CertsPath string
 
 // RestrictedMode Liman' Restricted Mode Status
 var RestrictedMode bool
+
+// ListenInternally Whether to listen internal (127.0.0.1) or publicly (0.0.0.0)
+var ListenInternally bool
+
+// AuthKey Authentication string for liman
+var AuthKey string
+
+// CurrentIP Render Engine' Override IP
+var CurrentIP string

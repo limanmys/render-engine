@@ -35,6 +35,16 @@ func GetExtensionFromName(extensionName string) models.ExtensionModel {
 	return *extension
 }
 
+// GetGoEngine try to find extension id from it's name
+func GetGoEngine(machineID string) models.EngineModel {
+	engine := &models.EngineModel{MachineID: machineID}
+	db.Model(engine).Where("machine_id = ?", machineID).First()
+	/*if err != nil {
+		panic(err.Error())
+	}*/
+	return *engine
+}
+
 // GetFuncPermissions Structure of the permissions
 func GetFuncPermissions(userID string) []string {
 	roleIDs := getRoleMapsFromUserID(userID)
