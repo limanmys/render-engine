@@ -71,22 +71,23 @@ func FixExtensionPermissions(extensionID string, extensionName string) bool {
 	return false
 }
 
-func AddSystemCertificate(tmpPath string, targetName string) bool {
-	certPath, certUpdateCommand := GetCertificateStrings()
+func AddSystemCertificate(certificateString string, targetName string) error {
 	log.Println("Adding System Certificate")
-	_, err := ExecuteCommand("mv " + tmpPath + " " + certPath + "/" + targetName + ".crt")
+	certPath, certUpdateCommand := GetCertificateStrings()
+	err := ioutil.WriteFile(certPath+"/"+targetName+".crt", []byte(certificateString), 0644)
 	if err != nil {
-		log.Println(err)
-		return false
+		log.Println(err.Error())
+		return err
 	}
 
 	_, err = ExecuteCommand(certUpdateCommand)
-	if err == nil {
-		log.Println("System Certificate Added")
-		return true
+	if err != nil {
+		log.Println(err)
+
+		return err
 	}
-	log.Println(err)
-	return false
+	log.Println("System Certificate Added")
+	return nil
 }
 
 func RemoveSystemCertificate(targetName string) bool {
@@ -117,12 +118,12 @@ func GetCertificateStrings() (string, string) {
 	return certPath, certUpdateCommand
 }
 
-func SetDNSServers(server1 string, server2 string, server3 string) bool {
+func SetDNSServers(server1 string, server2 string, server3 string) error {
 	_, err := ExecuteCommand("chattr -i " + ResolvPath)
 	log.Println("Updating DNS Servers")
 	if err != nil {
 		log.Println(err)
-		return false
+		return err
 	}
 	newData := DNSOptions + "\n"
 	if server1 != "" {
@@ -141,16 +142,16 @@ func SetDNSServers(server1 string, server2 string, server3 string) bool {
 
 	if err != nil {
 		log.Println(err)
-		return false
+		return err
 	}
 
 	_, err = ExecuteCommand("chattr +i " + ResolvPath)
 	if err != nil {
 		log.Println(err)
-		return false
+		return err
 	}
 	log.Println("DNS Servers Updated")
-	return true
+	return nil
 }
 
 func IsCentOs() bool {

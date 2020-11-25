@@ -43,6 +43,9 @@ func permissionsMiddleware(next http.Handler) http.Handler {
 				w.WriteHeader(403)
 				_, _ = w.Write([]byte("nope8"))
 				return
+			} else {
+				next.ServeHTTP(w, r)
+				return
 			}
 		}
 

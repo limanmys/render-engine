@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
+	"time"
 	"unicode/utf16"
 )
 
@@ -89,4 +90,17 @@ func EncodeMessageUTF16(message string) string {
 		buf.WriteString(fmt.Sprintf("%04X", num))
 	}
 	return buf.String()
+}
+
+func IsNewer(time1 string, time2 string) bool {
+	obj1, err := time.Parse(time.RFC3339, time1)
+	if err != nil {
+		return false
+	}
+
+	obj2, err := time.Parse(time.RFC3339, time2)
+	if err != nil {
+		return false
+	}
+	return obj1.After(obj2)
 }

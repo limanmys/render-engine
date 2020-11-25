@@ -39,10 +39,19 @@ func GetExtensionFromName(extensionName string) models.ExtensionModel {
 func GetGoEngine(machineID string) models.EngineModel {
 	engine := &models.EngineModel{MachineID: machineID}
 	db.Model(engine).Where("machine_id = ?", machineID).First()
-	/*if err != nil {
-		panic(err.Error())
-	}*/
 	return *engine
+}
+
+func GetSystemSetting(name string) models.SystemSettingsModel {
+	setting := &models.SystemSettingsModel{}
+	db.Model(setting).Where("key = ?", name).First()
+	return *setting
+}
+
+func GetReplication(name string) models.ReplicationModel {
+	replication := &models.ReplicationModel{}
+	db.Model(replication).Where("key = ?", name).First()
+	return *replication
 }
 
 // GetFuncPermissions Structure of the permissions

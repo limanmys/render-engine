@@ -34,6 +34,27 @@ func GetUserData(serverID string, extensionID string, userID string) (models.Ser
 	return GetServer(serverID), GetExtension(extensionID), getSettings(userID, serverID)
 }
 
+func ReadSettings() {
+	var settings []models.SystemSettingsModel
+	_ = db.Model(&settings).ForEach(func(setting models.SystemSettingsModel) error {
+		switch setting.Key {
+		case "APP_KEY":
+			helpers.AppKey = setting.Data
+			break
+		case "GO_KEY":
+			helpers.AuthKey = setting.Data
+			break
+		case "LIMAN_IP":
+			helpers.LimanIP = setting.Data
+			break
+		case "LIMAN_RESTRICTED":
+			helpers.LimanIP = setting.Data
+			break
+		}
+		return nil
+	})
+}
+
 // GetUserIDFromToken Find token from token
 func GetUserIDFromToken(tokenID string) string {
 	token, err := getToken(tokenID)

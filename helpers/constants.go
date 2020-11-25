@@ -50,3 +50,9 @@ var AuthKey string
 
 // CurrentIP Render Engine' Override IP
 var CurrentIP string
+
+// LimanIP Liman' IP
+var LimanIP string
+
+// MachineID Current Machine' Unique UUID
+var MachineID string

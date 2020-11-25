@@ -1,6 +1,7 @@
 package postgresql
 
 import (
+	"fmt"
 	"io/ioutil"
 	"log"
 	"strings"
@@ -39,6 +40,34 @@ func AddOrUpdateGoEngine(token string, machineID string, ipAddress string, port 
 	return nil
 }
 
+func AddorUpdateReplication(name string, completed bool, log string) error {
+	newData := &models.ReplicationModel{
+		MachineID: helpers.MachineID,
+		UpdatedAt: time.Now().Format(time.RFC3339),
+		Completed: completed,
+		Log:       log,
+	}
+	replication := GetReplication(name)
+	if replication.ID != "" {
+		newData.CreatedAt = replication.CreatedAt
+		_, err := db.Model(newData).Where("id = ?", replication.ID).Update()
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+	newID, _ := uuid.NewUUID()
+	newData.ID = newID.String()
+	newData.Key = name
+	newData.CreatedAt = time.Now().Format(time.RFC3339)
+	_, err := db.Model(newData).Insert()
+	if err != nil {
+		fmt.Println(err.Error())
+		return err
+	}
+	return nil
+}
+
 func StoreEngineData() {
 	key, _ := uuid.NewUUID()
 	machineID, err := ioutil.ReadFile("/sys/class/dmi/id/product_uuid")
@@ -51,8 +80,8 @@ func StoreEngineData() {
 	} else {
 		log.Printf("Current IP Address %v\n", localIP)
 	}
-	machineIDSTR := strings.TrimSpace(strings.ToUpper(string(machineID)))
-	err = AddOrUpdateGoEngine(key.String(), machineIDSTR, localIP, 5454)
+	helpers.MachineID = strings.TrimSpace(strings.ToUpper(string(machineID)))
+	err = AddOrUpdateGoEngine(key.String(), helpers.MachineID, localIP, 5454)
 	if err != nil {
 		log.Panic(err.Error())
 	}

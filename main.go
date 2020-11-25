@@ -5,6 +5,7 @@ import (
 	"github.com/limanmys/go/helpers"
 	"github.com/limanmys/go/postgresql"
 	"github.com/limanmys/go/recycle"
+	"github.com/limanmys/go/replications"
 	"github.com/limanmys/go/web"
 )
 
@@ -17,9 +18,13 @@ func main() {
 
 	postgresql.InitDB()
 
+	postgresql.ReadSettings()
+
 	postgresql.StoreEngineData()
 
 	go recycle.Start()
+
+	go replications.Loop()
 
 	web.CreateWebServer()
 }
