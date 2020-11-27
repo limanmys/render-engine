@@ -17,7 +17,7 @@ func GetWidget(widgetID string) models.Widget {
 //GetServer Retrieve server from id
 func GetServer(serverID string) models.ServerModel {
 	server := &models.ServerModel{ID: serverID}
-	db.Model(server).WherePK().Select()
+	db.Model(server).WherePK().First()
 	return *server
 }
 
@@ -26,6 +26,13 @@ func GetExtension(extensionID string) models.ExtensionModel {
 	extension := &models.ExtensionModel{ID: extensionID}
 	db.Model(extension).WherePK().First()
 	return *extension
+}
+
+//GetExtensions
+func GetExtensions() []models.ExtensionModel {
+	extensions := []models.ExtensionModel{}
+	db.Model(&extensions).Select()
+	return extensions
 }
 
 // GetExtensionFromName try to find extension id from it's name
@@ -52,6 +59,18 @@ func GetReplication(name string) models.ReplicationModel {
 	replication := &models.ReplicationModel{}
 	db.Model(replication).Where("key = ?", name).First()
 	return *replication
+}
+
+func GetReplications(name string) []models.ReplicationModel {
+	replications := []models.ReplicationModel{}
+	db.Model(&replications).Where("key = ?", name).Select()
+	return replications
+}
+
+func GetExtensionFile(fileID string) models.ExtensionFileModel {
+	fileObj := &models.ExtensionFileModel{}
+	db.Model(fileObj).Where("extension_id = ?", fileID).First()
+	return *fileObj
 }
 
 // GetFuncPermissions Structure of the permissions

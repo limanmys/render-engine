@@ -19,7 +19,7 @@ func AddOrUpdateGoEngine(token string, machineID string, ipAddress string, port 
 		IPAddress: ipAddress,
 		Port:      port,
 		Enabled:   true,
-		UpdatedAt: time.Now().Format(time.RFC3339),
+		UpdatedAt: time.Now().Format("2006-01-02 15:04:05"),
 	}
 	engine := GetGoEngine(machineID)
 	if engine.ID != "" {
@@ -32,7 +32,7 @@ func AddOrUpdateGoEngine(token string, machineID string, ipAddress string, port 
 	}
 	newID, _ := uuid.NewUUID()
 	newData.ID = newID.String()
-	newData.CreatedAt = time.Now().Format(time.RFC3339)
+	newData.CreatedAt = time.Now().Format("2006-01-02 15:04:05")
 	_, err := db.Model(newData).Insert()
 	if err != nil {
 		return err
@@ -43,15 +43,17 @@ func AddOrUpdateGoEngine(token string, machineID string, ipAddress string, port 
 func AddorUpdateReplication(name string, completed bool, log string) error {
 	newData := &models.ReplicationModel{
 		MachineID: helpers.MachineID,
-		UpdatedAt: time.Now().Format(time.RFC3339),
+		UpdatedAt: time.Now().Format("2006-01-02 15:04:05"),
 		Completed: completed,
 		Log:       log,
+		Key:       name,
 	}
 	replication := GetReplication(name)
 	if replication.ID != "" {
 		newData.CreatedAt = replication.CreatedAt
 		_, err := db.Model(newData).Where("id = ?", replication.ID).Update()
 		if err != nil {
+			fmt.Println(err.Error())
 			return err
 		}
 		return nil
@@ -59,7 +61,8 @@ func AddorUpdateReplication(name string, completed bool, log string) error {
 	newID, _ := uuid.NewUUID()
 	newData.ID = newID.String()
 	newData.Key = name
-	newData.CreatedAt = time.Now().Format(time.RFC3339)
+	newData.Completed = completed
+	newData.CreatedAt = time.Now().Format("2006-01-02 15:04:05")
 	_, err := db.Model(newData).Insert()
 	if err != nil {
 		fmt.Println(err.Error())

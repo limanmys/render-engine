@@ -65,6 +65,10 @@ func ReadConfiguration() {
 	ExtensionsPath = viper.GetString("EXTENSIONS_PATH")
 
 	CurrentIP = viper.GetString("CURRENT_IP")
+
+	//Set Global Timezone
+
+	os.Setenv("TZ", "Europe/Istanbul")
 }
 
 func CheckRestrictedMode() bool {

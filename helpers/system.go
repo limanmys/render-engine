@@ -5,10 +5,11 @@ import (
 	"log"
 	"net"
 	"os"
+	"strings"
 )
 
 // LimanUser : Just in case if liman user changed to something else.
-const LimanUser = "liman"
+const LimanUser = "root"
 
 // DefaultShell : Default sh shell
 const DefaultShell = "/bin/bash"
@@ -20,30 +21,34 @@ const ResolvPath = "/etc/resolv.conf"
 const DNSOptions = "options rotate timeout:1 retries:1"
 
 func FixExtensionKeys(extensionID string) bool {
-	_, err := ExecuteCommand("chmod -R 700 " + KeysPath + extensionID)
+	log.Println("Fixing extension key permissions")
+	_, err := ExecuteCommand("chmod -R 700 " + KeysPath + extensionID + " 2>&1")
 	if err != nil {
 		return false
 	}
 
-	_, err = ExecuteCommand("chown -R " + extensionID + ":" + LimanUser + " " + KeysPath + extensionID)
+	_, err = ExecuteCommand("chown -R " + strings.ReplaceAll(extensionID, "-", "") + ":" + LimanUser + " " + KeysPath + extensionID + " 2>&1")
 	if err == nil {
 		return true
 	}
+	log.Println("Extension key permissions fixed.")
 	return false
 }
 
 func AddUser(extensionID string) bool {
+	extensionID = strings.ReplaceAll(extensionID, "-", "")
 	log.Println("Adding System User : " + extensionID)
-	_, err := ExecuteCommand("useradd -r -s " + DefaultShell + " " + extensionID)
+	out, err := ExecuteCommand("useradd -r -s " + DefaultShell + " " + extensionID + " 2>&1")
 	if err == nil {
 		log.Println("System User Added : " + extensionID)
 		return true
 	}
-	log.Println(err)
+	log.Println(out, err)
 	return false
 }
 
 func RemoveUser(extensionID string) bool {
+	extensionID = strings.ReplaceAll(extensionID, "-", "")
 	log.Println("Removing System User : " + extensionID)
 	_, err := ExecuteCommand("userdel " + extensionID)
 	if err == nil {
@@ -55,6 +60,7 @@ func RemoveUser(extensionID string) bool {
 }
 
 func FixExtensionPermissions(extensionID string, extensionName string) bool {
+	extensionID = strings.ReplaceAll(extensionID, "-", "")
 	_, err := ExecuteCommand("chmod -R 770 " + ExtensionsPath + extensionName + " 2>&1")
 	log.Println("Fixing Extension Permissions")
 	if err != nil {
