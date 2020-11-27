@@ -38,12 +38,15 @@ jobs:
 
           rm -rf package/usr/share/liman-go/sandbox/php/.git
           mkdir -p package/usr/share/liman-go/{keys,certs,extensions,logs}
+          mkdir -p package/tmp/
           mkdir package/DEBIAN
           mv main package/usr/share/liman-go/liman-go
-          mv sample.conf package/usr/share/liman-go/.service.conf.sample
+          mv sample.conf package/usr/share/liman-go/service.conf.example
+          mv debian/smb-dhcp-client package/tmp/smb-dhcp-client
+          mv debian/postinst package/DEBIAN/postinst
           cd package
 
-          touch DEBIAN/{md5sums,control,preinst,postinst}
+          touch DEBIAN/{md5sums,control,preinst}
           find . -type f ! -regex '.*.hg.*' ! -regex '.*?debian-binary.*' ! -regex '.*?DEBIAN.*' -printf '%P ' | xargs md5sum  1>/dev/null 2>/dev/null || true
           find . \( -name ".git" -o -name ".gitignore" -o -name ".gitmodules" -o -name ".gitattributes" \) -exec rm -rf -- {} + 1>/dev/null 2>/dev/null || true
           
@@ -58,7 +61,7 @@ jobs:
           Architecture: amd64
           Priority: important
           Description: Liman MYS' Go Service
-          Depends: php7.3-fpm
+          Depends: php7.3-fpm, python3
           """ > DEBIAN/control
           cd ../
 

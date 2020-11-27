@@ -1,0 +1,12 @@
+#!/bin/bash
+
+if (systemctl -q is-active systemd-resolved.service); then
+    systemctl disable systemd-resolved
+    systemctl stop systemd-resolved
+    rm /etc/resolv.conf
+    /usr/bin/python3 /tmp/smb-dhcp-client 2> /dev/null | grep "Domain Name Server(s)" | cut -d : -f 2 |  xargs  | sed 's/ /\n/g' |sed 's/.*\..*\..*\..*/nameserver &/g' > /etc/resolv.conf
+fi
+
+if [ ! -f "/usr/share/liman-go/service.conf" ]; then
+    cp /usr/share/liman-go/service.conf.example /usr/share/liman-go/service.conf
+fi
