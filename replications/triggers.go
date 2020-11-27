@@ -2,6 +2,7 @@ package replications
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -54,10 +55,11 @@ func Extension() {
 	}
 
 	for _, extension := range extensions {
-		replicationName := "EXTENSION-" + extension.Name
+		extensionName := strings.ToLower(extension.Name)
+		replicationName := "EXTENSION-" + extension.ID
 		replication := postgresql.GetReplication(replicationName)
 		if helpers.IsNewer(replication.UpdatedAt, extension.FileUpdateAt) {
-			log.Printf("Extension %v is already up to date.", extension.Name)
+			log.Printf("Extension %v is already up to date.", extensionName)
 			continue
 		}
 
@@ -83,7 +85,7 @@ func Extension() {
 
 		log.Printf("Extension %v is downloaded and extracted\n", extension.ID)
 
-		extensionFolder := helpers.ExtensionsPath + extension.Name
+		extensionFolder := helpers.ExtensionsPath + extensionName
 
 		if _, err := os.Stat(extensionFolder); os.IsNotExist(err) {
 			err = os.MkdirAll(extensionFolder, 0700)
@@ -107,7 +109,7 @@ func Extension() {
 			helpers.AddUser(extension.ID)
 		}
 
-		helpers.FixExtensionPermissions(extension.ID, extension.Name)
+		helpers.FixExtensionPermissions(extension.ID, extensionName)
 
 		keyPath := helpers.KeysPath + extension.ID
 		if _, err := os.Stat(keyPath); os.IsNotExist(err) {
@@ -120,6 +122,24 @@ func Extension() {
 		}
 
 		helpers.FixExtensionKeys(extension.ID)
+
+		//Check Dependencies
+		databasePath := extensionFolder + "/db.json"
+		data, err := ioutil.ReadFile(databasePath)
+		if err != nil {
+			postgresql.AddorUpdateReplication(replicationName, true, err.Error())
+			continue
+		}
+
+		var database map[string]interface{}
+		json.Unmarshal(data, &database)
+
+		if dependencies, ok := database["dependencies"]; ok {
+			depStr := fmt.Sprintf("%v", dependencies)
+			//Install them.
+			command := "if [ -z '$(find /var/cache/apt/pkgcache.bin -mmin -60)' ]; then sudo apt-get update; fi;DEBIAN_FRONTEND=noninteractive sudo apt-get install -o Dpkg::Use-Pty=0 -o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold' " + depStr + " -y --force-yes"
+			helpers.ExecuteWithLiveOutput(command)
+		}
 
 		postgresql.AddorUpdateReplication(replicationName, true, "")
 

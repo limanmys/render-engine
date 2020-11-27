@@ -58,7 +58,7 @@ jobs:
           Architecture: amd64
           Priority: important
           Description: Liman MYS' Go Service
-          Depends: 
+          Depends: php7.3-fpm
           """ > DEBIAN/control
           cd ../
 

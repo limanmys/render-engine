@@ -1,6 +1,8 @@
 package postgresql
 
 import (
+	"io/ioutil"
+
 	"github.com/go-pg/pg/v10"
 	"github.com/limanmys/go/helpers"
 	"github.com/limanmys/go/models"
@@ -50,7 +52,16 @@ func ReadSettings() {
 		case "LIMAN_RESTRICTED":
 			helpers.LimanIP = setting.Data
 			break
+		case "SSL_PRIVATE_KEY":
+			d1 := []byte(setting.Data)
+			ioutil.WriteFile(helpers.CertsPath+"liman.key", d1, 0600)
+			break
+		case "SSL_PUBLIC_KEY":
+			d1 := []byte(setting.Data)
+			ioutil.WriteFile(helpers.CertsPath+"liman.crt", d1, 0600)
+			break
 		}
+
 		return nil
 	})
 }

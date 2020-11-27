@@ -1,7 +1,9 @@
 package helpers
 
 import (
+	"bufio"
 	"fmt"
+	"log"
 	"net"
 	"os"
 	"os/exec"
@@ -14,6 +16,20 @@ func ExecuteCommand(input string) (string, error) {
 	cmd := exec.Command("/bin/bash", "-c", input)
 	stdout, stderr := cmd.Output()
 	return strings.TrimSpace(string(stdout)), stderr
+}
+
+// ExecuteWithLiveOutput : executing given command with realtime output
+func ExecuteWithLiveOutput(command string) {
+	cmd := exec.Command("bash", "-c", command)
+	stdout, _ := cmd.StdoutPipe()
+
+	_ = cmd.Start()
+	scanner := bufio.NewScanner(stdout)
+	for scanner.Scan() {
+		m := scanner.Text()
+		log.Println(m)
+	}
+	_ = cmd.Wait()
 }
 
 // Abort : Abort system and print message
