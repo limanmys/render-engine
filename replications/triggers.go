@@ -49,7 +49,7 @@ func Extension() {
 	log.Println("Checking Extensions updates from Liman")
 	extensions := postgresql.GetExtensions()
 
-	if extensions[0].ID == "" {
+	if len(extensions) < 1 || extensions[0].ID == "" {
 		return
 	}
 
@@ -172,6 +172,6 @@ func Loop() {
 		Dns()
 		Extension()
 		Certificate()
-		time.Sleep(time.Second * 30)
+		time.Sleep(time.Second * 5)
 	}
 }
