@@ -12,6 +12,7 @@ import (
 	"github.com/limanmys/go/models"
 )
 
+//AddOrUpdateGoEngine AddOrUpdateGoEngine
 func AddOrUpdateGoEngine(token string, machineID string, ipAddress string, port int) error {
 	newData := &models.EngineModel{
 		Token:     token,
@@ -40,6 +41,7 @@ func AddOrUpdateGoEngine(token string, machineID string, ipAddress string, port 
 	return nil
 }
 
+//AddorUpdateReplication AddorUpdateReplication
 func AddorUpdateReplication(name string, completed bool, log string) error {
 	newData := &models.ReplicationModel{
 		MachineID: helpers.MachineID,
@@ -71,6 +73,7 @@ func AddorUpdateReplication(name string, completed bool, log string) error {
 	return nil
 }
 
+//StoreEngineData Store the current engine data.
 func StoreEngineData() {
 	key, _ := uuid.NewUUID()
 	machineID, err := ioutil.ReadFile("/sys/class/dmi/id/product_uuid")

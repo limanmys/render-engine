@@ -100,6 +100,7 @@ func EncodeMessageUTF16(message string) string {
 	return buf.String()
 }
 
+//IsNewer Check whether time is newer than second one.
 func IsNewer(time1 string, time2 string) bool {
 	obj1, err := time.Parse("2006-01-02 15:04:05", time1)
 	if err != nil {
@@ -114,6 +115,7 @@ func IsNewer(time1 string, time2 string) bool {
 	return obj1.After(obj2)
 }
 
+//Unzip Unzip the given zip path to destination path
 func Unzip(src string, dest string) error {
 
 	r, err := zip.OpenReader(src)
@@ -166,6 +168,7 @@ func Unzip(src string, dest string) error {
 	return nil
 }
 
+//RandomStr Create random string
 func RandomStr(len int) string {
 	buff := make([]byte, len)
 	rand.Read(buff)
@@ -173,6 +176,7 @@ func RandomStr(len int) string {
 	return str[:len]
 }
 
+//CopyFolder copy folder
 func CopyFolder(src string, dst string) error {
 	var err error
 	var fds []os.FileInfo

@@ -20,6 +20,7 @@ const ResolvPath = "/etc/resolv.conf"
 // DNSOptions : Options to have multiple dns servers
 const DNSOptions = "options rotate timeout:1 retries:1"
 
+//FixExtensionKeys fix the extension key' permissions.
 func FixExtensionKeys(extensionID string) bool {
 	log.Println("Fixing extension key permissions")
 	_, err := ExecuteCommand("chmod -R 700 " + KeysPath + extensionID + " 2>&1")
@@ -35,6 +36,7 @@ func FixExtensionKeys(extensionID string) bool {
 	return false
 }
 
+//AddUser Add system user.
 func AddUser(extensionID string) bool {
 	extensionID = strings.ReplaceAll(extensionID, "-", "")
 	log.Println("Adding System User : " + extensionID)
@@ -47,6 +49,7 @@ func AddUser(extensionID string) bool {
 	return false
 }
 
+//RemoveUser remove the system user.
 func RemoveUser(extensionID string) bool {
 	extensionID = strings.ReplaceAll(extensionID, "-", "")
 	log.Println("Removing System User : " + extensionID)
@@ -59,6 +62,7 @@ func RemoveUser(extensionID string) bool {
 	return false
 }
 
+//FixExtensionPermissions Fix the permissions of extensions folder.
 func FixExtensionPermissions(extensionID string, extensionName string) bool {
 	extensionID = strings.ReplaceAll(extensionID, "-", "")
 	_, err := ExecuteCommand("chmod -R 770 " + ExtensionsPath + extensionName + " 2>&1")
@@ -77,6 +81,7 @@ func FixExtensionPermissions(extensionID string, extensionName string) bool {
 	return false
 }
 
+//AddSystemCertificate Add ssl certificate to system.
 func AddSystemCertificate(certificateString string, targetName string) error {
 	log.Println("Adding System Certificate")
 	certPath, certUpdateCommand := GetCertificateStrings()
@@ -96,6 +101,7 @@ func AddSystemCertificate(certificateString string, targetName string) error {
 	return nil
 }
 
+//RemoveSystemCertificate Remove system certificate from system.
 func RemoveSystemCertificate(targetName string) bool {
 	log.Println("Removing System Certificate")
 	certPath, certUpdateCommand := GetCertificateStrings()
@@ -114,6 +120,7 @@ func RemoveSystemCertificate(targetName string) bool {
 	return false
 }
 
+//GetCertificateStrings Retrieve important certificate paths and commands.
 func GetCertificateStrings() (string, string) {
 	certPath := "/usr/local/share/ca-certificates/"
 	certUpdateCommand := "update-ca-certificates"
@@ -124,6 +131,7 @@ func GetCertificateStrings() (string, string) {
 	return certPath, certUpdateCommand
 }
 
+//SetDNSServers Set system dns'
 func SetDNSServers(server1 string, server2 string, server3 string) error {
 	_, err := ExecuteCommand("chattr -i " + ResolvPath)
 	log.Println("Updating DNS Servers")
@@ -160,6 +168,7 @@ func SetDNSServers(server1 string, server2 string, server3 string) error {
 	return nil
 }
 
+//IsCentOs Check if system rpm based.
 func IsCentOs() bool {
 	_, err := os.Stat("/etc/redhat-release")
 	if os.IsNotExist(err) {
@@ -168,6 +177,7 @@ func IsCentOs() bool {
 	return true
 }
 
+//GetLocalIP Retrieve the local ip by querying database server.
 func GetLocalIP() string {
 	if CurrentIP != "" {
 		return CurrentIP

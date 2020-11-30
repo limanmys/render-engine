@@ -8,6 +8,7 @@ import (
 	"github.com/mervick/aes-everywhere/go/aes256"
 )
 
+//GetWidget Retrieve Widget Object by ID
 func GetWidget(widgetID string) models.Widget {
 	widget := &models.Widget{ID: widgetID}
 	_ = db.Model(widget).WherePK().First()
@@ -28,7 +29,7 @@ func GetExtension(extensionID string) models.ExtensionModel {
 	return *extension
 }
 
-//GetExtensions
+//GetExtensions Get All Extensions
 func GetExtensions() []models.ExtensionModel {
 	extensions := []models.ExtensionModel{}
 	db.Model(&extensions).Select()
@@ -49,24 +50,28 @@ func GetGoEngine(machineID string) models.EngineModel {
 	return *engine
 }
 
+//GetSystemSetting Get System Settings
 func GetSystemSetting(name string) models.SystemSettingsModel {
 	setting := &models.SystemSettingsModel{}
 	db.Model(setting).Where("key = ?", name).First()
 	return *setting
 }
 
+//GetReplication Get Replication object of current machine
 func GetReplication(name string) models.ReplicationModel {
 	replication := &models.ReplicationModel{}
-	db.Model(replication).Where("key = ?", name).First()
+	db.Model(replication).Where("key = ? and machine_id = ?", name, helpers.MachineID).First()
 	return *replication
 }
 
+//GetReplications Retrieve all replications for current machine.
 func GetReplications(name string) []models.ReplicationModel {
 	replications := []models.ReplicationModel{}
-	db.Model(&replications).Where("key = ?", name).Select()
+	db.Model(&replications).Where("key = ? and machine_id = ?", name, helpers.MachineID).Select()
 	return replications
 }
 
+//GetExtensionFile Get Extension File from Postgresql
 func GetExtensionFile(fileID string) models.ExtensionFileModel {
 	fileObj := &models.ExtensionFileModel{}
 	db.Model(fileObj).Where("extension_id = ?", fileID).First()

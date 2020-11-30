@@ -36,6 +36,7 @@ func GetUserData(serverID string, extensionID string, userID string) (models.Ser
 	return GetServer(serverID), GetExtension(extensionID), getSettings(userID, serverID)
 }
 
+//ReadSettings Read Settings from Configuration File
 func ReadSettings() {
 	var settings []models.SystemSettingsModel
 	_ = db.Model(&settings).ForEach(func(setting models.SystemSettingsModel) error {

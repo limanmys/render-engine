@@ -7,7 +7,7 @@ import (
 )
 
 func dnsHandler(w http.ResponseWriter, r *http.Request) {
-	replications.Dns()
+	replications.DNS()
 	w.WriteHeader(http.StatusOK)
 	_, _ = w.Write([]byte("Message received!"))
 }

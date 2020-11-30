@@ -13,7 +13,8 @@ import (
 	"github.com/limanmys/go/postgresql"
 )
 
-func Dns() {
+//DNS Dns Replication Loop
+func DNS() {
 	log.Println("Checking DNS updates from Liman")
 	setting := postgresql.GetSystemSetting("SYSTEM_DNS")
 	if setting.ID == "" {
@@ -46,6 +47,7 @@ func Dns() {
 	log.Println("DNS update check completed")
 }
 
+//Extension Extension Replication Loop
 func Extension() {
 	log.Println("Checking Extensions updates from Liman")
 	extensions := postgresql.GetExtensions()
@@ -148,6 +150,42 @@ func Extension() {
 	log.Println("Extensions update check completed")
 }
 
+//ExtensionDB ExtensionDB Replication Loop
+func ExtensionDB() {
+	log.Println("Checking ExtensionDB's updates from Liman")
+	extensions := postgresql.GetExtensions()
+
+	if len(extensions) < 1 || extensions[0].ID == "" {
+		return
+	}
+
+	for _, extension := range extensions {
+		extensionName := strings.ToLower(extension.Name)
+		replicationName := "EXTENSION_DB-" + extension.ID
+		replication := postgresql.GetReplication(replicationName)
+		if helpers.IsNewer(replication.UpdatedAt, extension.FileUpdateAt) {
+			log.Printf("Extension %v is already up to date.", extensionName)
+			continue
+		}
+		setting := postgresql.GetSystemSetting("EXTENSION_DB-" + extension.ID)
+
+		if setting.ID == "" {
+			log.Printf("Extension %v db not found!", extensionName)
+			continue
+		}
+		var database map[string]interface{}
+		json.Unmarshal([]byte(setting.Data), &database)
+		strDB, _ := json.Marshal(database)
+		err := ioutil.WriteFile("/tmp/mert", strDB, 0644)
+
+		postgresql.AddorUpdateReplication(replicationName, err == nil, "")
+
+	}
+
+	log.Println("Extensions update check completed")
+}
+
+//Certificate Certificate Replication Loop
 func Certificate() {
 	log.Println("Checking Certificate updates from Liman")
 	setting := postgresql.GetSystemSetting("SYSTEM_CERTIFICATES")
@@ -187,10 +225,12 @@ func Certificate() {
 	log.Println("Certificate update check completed")
 }
 
+//Loop Main Loop Function.
 func Loop() {
 	for {
-		Dns()
+		DNS()
 		Extension()
+		ExtensionDB()
 		Certificate()
 		time.Sleep(time.Second * 5)
 	}

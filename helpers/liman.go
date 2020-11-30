@@ -14,10 +14,15 @@ func ReadConfiguration() {
 		ConfigFilePath = customPath
 	}
 
+	_, err := os.Stat(customPath)
+	if os.IsNotExist(err) {
+		ConfigFilePath = "/usr/share/liman-go/service.conf"
+	}
+
 	viper.SetConfigFile(ConfigFilePath)
 	viper.SetConfigType("env")
 
-	err := viper.ReadInConfig()
+	err = viper.ReadInConfig()
 	if err != nil {
 		fmt.Printf("Konfigürasyon dosyası okunamadı!\n%v\n", err.Error())
 		os.Exit(1)
@@ -71,6 +76,7 @@ func ReadConfiguration() {
 	os.Setenv("TZ", "Europe/Istanbul")
 }
 
+//CheckRestrictedMode ..
 func CheckRestrictedMode() bool {
 	return RestrictedMode
 }
