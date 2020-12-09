@@ -4,9 +4,10 @@ import (
 	"errors"
 	"log"
 	"net/http"
-	"github.com/limanmys/go/helpers"
-	"github.com/limanmys/go/sqlite"
 	"strings"
+
+	"github.com/limanmys/go/helpers"
+	"github.com/limanmys/go/postgresql"
 )
 
 func extractRequestData(target []string, r *http.Request) (map[string]string, error) {
@@ -19,7 +20,7 @@ func extractRequestData(target []string, r *http.Request) (map[string]string, er
 		}
 		if value == "token" {
 			//Try to get UserID from Token
-			userID := sqlite.GetUserIDFromToken(temp)
+			userID := postgresql.GetUserIDFromToken(temp)
 			if userID == "" {
 				return nil, errors.New("token is not valid")
 			}
@@ -39,14 +40,14 @@ func permissionsMiddleware(next http.Handler) http.Handler {
 		var userID, extensionID, serverID string
 
 		if r.Header.Get("liman-token") != "" {
-			userID = sqlite.GetUserIDFromLimanToken(r.Header.Get("liman-token"))
+			userID = postgresql.GetUserIDFromLimanToken(r.Header.Get("liman-token"))
 			if userID == "" {
 				w.WriteHeader(403)
 				_, _ = w.Write([]byte("nope4"))
 				return
 			}
 		} else {
-			userID = sqlite.GetUserIDFromToken(token)
+			userID = postgresql.GetUserIDFromToken(token)
 			if userID == "" {
 				w.WriteHeader(403)
 				_, _ = w.Write([]byte("nope5"))
@@ -54,7 +55,7 @@ func permissionsMiddleware(next http.Handler) http.Handler {
 			}
 		}
 
-		userObj := sqlite.GetUser(userID)
+		userObj := postgresql.GetUser(userID)
 		if userObj.Status == 1 {
 			next.ServeHTTP(w, r)
 			return
@@ -65,7 +66,7 @@ func permissionsMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		permissions := sqlite.GetObjPermissions(userID)
+		permissions := postgresql.GetObjPermissions(userID)
 		if r.FormValue("server_id") != "" {
 			serverID = r.FormValue("server_id")
 			if !helpers.Contains(permissions, serverID) {
@@ -78,7 +79,7 @@ func permissionsMiddleware(next http.Handler) http.Handler {
 		if r.FormValue("extension_id") != "" {
 			extensionID = r.FormValue("extension_id")
 			if helpers.IsValidUUID(extensionID) == false {
-				extensionID = sqlite.GetExtensionFromName(extensionID).ID
+				extensionID = postgresql.GetExtensionFromName(extensionID).ID
 			}
 			if !helpers.Contains(permissions, extensionID) || extensionID == "" {
 				w.WriteHeader(403)

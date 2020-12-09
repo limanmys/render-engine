@@ -4,11 +4,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/limanmys/go/helpers"
-	"github.com/limanmys/go/sqlite"
 	"io/ioutil"
 	"os"
 	"strings"
+
+	"github.com/limanmys/go/helpers"
+	"github.com/limanmys/go/postgresql"
 
 	"github.com/mervick/aes-everywhere/go/aes256"
 )
@@ -17,9 +18,9 @@ import (
 func GeneratePHPCommand(targetFunction string, userID string, extensionID string, serverID string, requestData map[string]string, token string, baseURL string, locale string, logObject RegularLog) (string, error) {
 	result := make(map[string]string)
 	combinerPath := "/liman/sandbox/php/index.php"
-	server, extension, settings := sqlite.GetUserData(serverID, extensionID, userID)
-	user := sqlite.GetUser(userID)
-	clientUsername, clientPassword, _, serverKey := sqlite.GetServerKey(userID, serverID)
+	server, extension, settings := postgresql.GetUserData(serverID, extensionID, userID)
+	user := postgresql.GetUser(userID)
+	clientUsername, clientPassword, _, serverKey := postgresql.GetServerKey(userID, serverID)
 
 	if clientUsername != "" && clientPassword != "" {
 		settings["clientUsername"] = clientUsername
@@ -49,7 +50,7 @@ func GeneratePHPCommand(targetFunction string, userID string, extensionID string
 	b, _ = json.Marshal(requestData)
 	result["requestData"] = string(b)
 
-	license, _ := sqlite.GetLicense(extension.ID)
+	license, _ := postgresql.GetLicense(extension.ID)
 
 	result["license"] = license.Data
 
@@ -67,7 +68,7 @@ func GeneratePHPCommand(targetFunction string, userID string, extensionID string
 
 	result["publicPath"] = baseURL + "/eklenti/" + extension.ID + "/public/"
 
-	tmpPermissions := sqlite.GetFuncPermissions(userID)
+	tmpPermissions := postgresql.GetFuncPermissions(userID)
 	b, _ = json.Marshal(tmpPermissions)
 	result["permissions"] = string(b)
 
@@ -87,7 +88,6 @@ func GeneratePHPCommand(targetFunction string, userID string, extensionID string
 		}
 	}
 
-	fmt.Printf("%v %v\n", !helpers.Contains(tmpPermissions, targetFunction), helpers.Contains(requiredList, targetFunction))
 	if user.Status != 1 && !helpers.Contains(tmpPermissions, targetFunction) && helpers.Contains(requiredList, targetFunction) {
 		return "", errors.New("Bu işlem için yetkiniz yok")
 	}

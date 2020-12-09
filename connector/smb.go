@@ -1,7 +1,6 @@
 package connector
 
 import (
-	"fmt"
 	"io"
 	"net"
 	"os"
@@ -34,27 +33,23 @@ func OpenSMBConnection(ipAddress string, username string, password string) (*smb
 func PutFileSMB(session *smb2.Session, localPath string, remotePath string, remoteDisk string) bool {
 	fs, err := session.Mount(remoteDisk + "$")
 	if err != nil {
-		fmt.Println("MOUNT > " + err.Error())
 		return false
 	}
 	defer fs.Umount()
 
 	f, err := fs.Create(remotePath)
 	if err != nil {
-		fmt.Println("CREATE > " + err.Error())
 		return false
 	}
 	defer f.Close()
 	srcFile, err := os.Open(localPath)
 	if err != nil {
-		fmt.Println("OPEN > " + err.Error())
 		return false
 	}
 	defer srcFile.Close()
 
 	_, err = io.Copy(f, srcFile)
 	if err != nil {
-		fmt.Println("COPY > " + err.Error())
 		return false
 	}
 	return true
@@ -64,14 +59,12 @@ func PutFileSMB(session *smb2.Session, localPath string, remotePath string, remo
 func GetFileSMB(session *smb2.Session, localPath string, remotePath string, remoteDisk string) bool {
 	fs, err := session.Mount(remoteDisk + "$")
 	if err != nil {
-		fmt.Println(err.Error())
 		return false
 	}
 	defer fs.Umount()
 
 	f, err := fs.Open(remotePath)
 	if err != nil {
-		fmt.Println(err.Error())
 		return false
 	}
 
@@ -84,14 +77,12 @@ func GetFileSMB(session *smb2.Session, localPath string, remotePath string, remo
 
 	srcFile, err := os.OpenFile(localPath, os.O_APPEND|os.O_WRONLY, os.ModeAppend)
 	if err != nil {
-		fmt.Println(err.Error())
 		return false
 	}
 	defer srcFile.Close()
 
 	_, err = io.Copy(srcFile, f)
 	if err != nil {
-		fmt.Println(err.Error())
 		return false
 	}
 	return true

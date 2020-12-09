@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/limanmys/go/sqlite"
+	"github.com/limanmys/go/postgresql"
 
 	"golang.org/x/text/encoding/unicode"
 )
@@ -30,7 +30,7 @@ func GetConnection(userID string, serverID string, IPAddress string) (*Connectio
 
 //CreateShell CreateShell
 func (val *Connection) CreateShell(userID string, serverID string, IPAddress string) bool {
-	username, password, keyPort, keyObject := sqlite.GetServerKey(userID, serverID)
+	username, password, keyPort, keyObject := postgresql.GetServerKey(userID, serverID)
 	if keyObject.Type == "ssh" {
 		connection, err := InitShellWithPassword(username, password, IPAddress, keyPort)
 		if err != nil {
@@ -60,7 +60,7 @@ func (val *Connection) CreateShell(userID string, serverID string, IPAddress str
 
 //CreateFileConnection CreateFileConnection
 func (val *Connection) CreateFileConnection(userID string, serverID string, IPAddress string) bool {
-	username, password, _, keyObject := sqlite.GetServerKey(userID, serverID)
+	username, password, _, keyObject := postgresql.GetServerKey(userID, serverID)
 	if keyObject.Type == "ssh" || keyObject.Type == "ssh_certificate" {
 		if val.SFTP != nil {
 			return true

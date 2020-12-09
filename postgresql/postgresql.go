@@ -1,15 +1,33 @@
-package sqlite
+package postgresql
 
 import (
-	"database/sql"
+	"github.com/go-pg/pg/v10"
 	"github.com/limanmys/go/helpers"
 	"github.com/limanmys/go/models"
-
-	//Sqlite3
-	_ "github.com/mattn/go-sqlite3"
 )
 
-var db *sql.DB
+var db *pg.DB
+
+// InitDB initialize database
+func InitDB() {
+	db = pg.Connect(&pg.Options{
+		User:     helpers.DBUsername,
+		Password: helpers.DBPassword,
+		Database: helpers.DBName,
+		Addr:     helpers.DBHost + ":" + helpers.DBPort,
+	})
+
+	//Thanks to library, we have to manually verify connection.
+	data := struct {
+		ID        string
+		Migration string
+		Batch     int
+	}{}
+	db.Query(&data, "select * from migrations limit 1")
+	if data.ID == "" {
+		panic("Postgresql sunusuna bağlanılamadı!")
+	}
+}
 
 // GetUserData opens the database
 func GetUserData(serverID string, extensionID string, userID string) (models.ServerModel, models.ExtensionModel, map[string]string) {
@@ -32,13 +50,4 @@ func GetUserIDFromLimanToken(tokenID string) string {
 		return ""
 	}
 	return token.UserID
-}
-
-// InitDB inialize database
-func InitDB() {
-	temp, err := sql.Open("sqlite3", "/liman/database/liman.sqlite?cache=shared&mode=rwc")
-	if err != nil {
-		helpers.Abort(err.Error())
-	}
-	db = temp
 }

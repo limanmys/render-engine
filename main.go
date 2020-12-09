@@ -3,8 +3,8 @@ package main
 import (
 	"github.com/limanmys/go/connector"
 	"github.com/limanmys/go/helpers"
+	"github.com/limanmys/go/postgresql"
 	"github.com/limanmys/go/recycle"
-	"github.com/limanmys/go/sqlite"
 	"github.com/limanmys/go/web"
 )
 
@@ -15,7 +15,7 @@ func main() {
 
 	helpers.ReadDataFromLiman()
 
-	sqlite.InitDB()
+	postgresql.InitDB()
 
 	go recycle.Start()
 

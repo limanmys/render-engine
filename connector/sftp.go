@@ -1,7 +1,6 @@
 package connector
 
 import (
-	"fmt"
 	"io"
 	"log"
 	"os"
@@ -77,7 +76,6 @@ func GetFileSFTP(conn *sftp.Client, localPath string, remotePath string) bool {
 
 	_, err = io.Copy(srcFile, f)
 	if err != nil {
-		fmt.Println(err.Error())
 		return false
 	}
 	return true
