@@ -49,6 +49,18 @@ func GetFuncPermissions(userID string) []string {
 	return permissions
 }
 
+// GetVariables Structure of the permissions
+func GetVariables(userID string) map[string]string {
+	roleIDs := getRoleMapsFromUserID(userID)
+	permissions := make(map[string]string)
+	for _, roleID := range roleIDs {
+		permissions = helpers.MergeStringMaps(permissions, getVariablesFromMorphID(roleID))
+	}
+	permissions = helpers.MergeStringMaps(permissions, getVariablesFromMorphID(userID))
+
+	return permissions
+}
+
 // GetObjPermissions Structure of the permissions
 func GetObjPermissions(userID string) []string {
 	roleIDs := getRoleMapsFromUserID(userID)
@@ -88,6 +100,16 @@ func getFuncPermissionsFromMorphID(morphID string) []string {
 	var permissions []string
 	_ = db.Model(&permission).Where("morph_id=? and type='function'", morphID).ForEach(func(permission models.Permission) error {
 		permissions = append(permissions, permission.Extra)
+		return nil
+	})
+	return permissions
+}
+
+func getVariablesFromMorphID(morphID string) map[string]string {
+	var permission []models.Permission
+	permissions := make(map[string]string)
+	_ = db.Model(&permission).Where("morph_id=? and type='variable'", morphID).ForEach(func(permission models.Permission) error {
+		permissions[permission.Key] = permission.Value
 		return nil
 	})
 	return permissions

@@ -72,6 +72,10 @@ func GeneratePHPCommand(targetFunction string, userID string, extensionID string
 	b, _ = json.Marshal(tmpPermissions)
 	result["permissions"] = string(b)
 
+	tmpVariables := postgresql.GetVariables(userID)
+	b, _ = json.Marshal(tmpVariables)
+	result["variables"] = string(b)
+
 	extensionJSONFile, err := ioutil.ReadFile("/liman/extensions/" + strings.ToLower(extension.Name) + "/db.json")
 	if err != nil {
 		return "", errors.New(err.Error())

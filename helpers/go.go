@@ -90,3 +90,14 @@ func EncodeMessageUTF16(message string) string {
 	}
 	return buf.String()
 }
+
+//MergeStringMaps Merge two string maps.
+func MergeStringMaps(ms ...map[string]string) map[string]string {
+	res := map[string]string{}
+	for _, m := range ms {
+		for k, v := range m {
+			res[k] = v
+		}
+	}
+	return res
+}
