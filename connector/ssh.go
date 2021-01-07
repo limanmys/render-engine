@@ -1,6 +1,8 @@
 package connector
 
 import (
+	"net"
+
 	"golang.org/x/crypto/ssh"
 )
 
@@ -13,7 +15,16 @@ func InitShellWithPassword(username string, password string, hostname string, po
 		},
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 	}
-	conn, err := ssh.Dial("tcp", hostname+":"+port, config)
+	ipAddress := hostname
+	for i := 0; i < 5; i++ {
+		addr, err := net.LookupIP(hostname)
+		if err == nil {
+			ipAddress = addr[0].String()
+			break
+		}
+	}
+
+	conn, err := ssh.Dial("tcp", ipAddress+":"+port, config)
 	if err != nil {
 		return nil, err
 	}
