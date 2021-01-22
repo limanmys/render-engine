@@ -32,10 +32,30 @@ func extractRequestData(target []string, r *http.Request) (map[string]string, er
 	return request, nil
 }
 
+func extractGetRequestData(target []string, r *http.Request) (map[string]string, error) {
+	request := make(map[string]string)
+	target = append(target, "token")
+	for _, value := range target {
+		data, ok := r.URL.Query()[value]
+		if !ok || len(data[0]) < 1 {
+			return nil, errors.New(value + " is missing.")
+		}
+		request[value] = data[0]
+	}
+	return request, nil
+}
+
 func permissionsMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		token := r.FormValue("token")
+
+		if token == "" {
+			data, ok := r.URL.Query()["connection_type"]
+			if ok || len(data[0]) > 1 {
+				token = data[0]
+			}
+		}
 
 		var userID, extensionID, serverID string
 

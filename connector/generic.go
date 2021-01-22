@@ -3,18 +3,21 @@ package connector
 import (
 	"encoding/base64"
 	"errors"
+	"fmt"
+	"io"
 	"strings"
 	"time"
 
 	"github.com/limanmys/go/postgresql"
 
+	"golang.org/x/crypto/ssh"
 	"golang.org/x/text/encoding/unicode"
 )
 
 //GetConnection GetConnection
 func GetConnection(userID string, serverID string, IPAddress string) (*Connection, error) {
 	var val Connection
-	if val2, ok := ActiveConnections[userID+serverID]; ok {
+	if val2, ok := ActiveConnections[userID+serverID+IPAddress]; ok {
 		val = val2
 	} else {
 		res := val.CreateShell(userID, serverID, IPAddress)
@@ -24,7 +27,24 @@ func GetConnection(userID string, serverID string, IPAddress string) (*Connectio
 	}
 
 	val.LastConnection = time.Now()
-	ActiveConnections[userID+serverID] = val
+	ActiveConnections[userID+serverID+IPAddress] = val
+	return &val, nil
+}
+
+//GetConnectionRaw GetConnectionRaw
+func GetConnectionRaw(userID string, connectionType string, username string, password string, IPAddress string, keyPort string) (*Connection, error) {
+	var val Connection
+	if val2, ok := ActiveConnections[userID+username+IPAddress]; ok {
+		val = val2
+	} else {
+		res := val.CreateShellRaw(connectionType, username, password, IPAddress, keyPort)
+		if res == false {
+			return &val, errors.New("cannot connect to server")
+		}
+	}
+
+	val.LastConnection = time.Now()
+	ActiveConnections[userID+username+IPAddress] = val
 	return &val, nil
 }
 
@@ -131,6 +151,57 @@ func (val Connection) Run(command string) string {
 		return strings.TrimSpace(stdout) + strings.TrimSpace(stderr)
 	}
 	return "Cannot run command!"
+}
+
+//Stdin Stdin
+func (val *Connection) Stdin() (io.WriteCloser, error) {
+	if val.SSH != nil {
+		if val.SSHSesion == nil {
+			sess, err := val.SSH.NewSession()
+			if err != nil {
+				fmt.Println(err.Error())
+			}
+			val.SSHSesion = sess
+		}
+		pipe, err := val.SSHSesion.StdinPipe()
+		val.In = pipe
+		return val.In, err
+	}
+	return nil, errors.New("unsupported connection type")
+}
+
+//Magic Magic
+func (val *Connection) Magic() error {
+	if val.SSH != nil {
+		if val.SSHSesion == nil {
+			val.SSHSesion, _ = val.SSH.NewSession()
+		}
+		pipe, err := val.SSHSesion.StdoutPipe()
+		val.Out = pipe
+
+		if err != nil {
+			return err
+		}
+
+		pipe2, err := val.SSHSesion.StdinPipe()
+		val.In = pipe2
+
+		if err != nil {
+			return err
+		}
+
+		modes := ssh.TerminalModes{
+			ssh.ECHO:          1,
+			ssh.TTY_OP_ISPEED: 14400,
+			ssh.TTY_OP_OSPEED: 14400,
+		}
+
+		val.SSHSesion.RequestPty("xterm", 400, 256, modes)
+		val.SSHSesion.Start("/bin/bash")
+
+		return nil
+	}
+	return errors.New("unsupported connection type")
 }
 
 //Put Put

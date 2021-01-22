@@ -1,6 +1,7 @@
 package connector
 
 import (
+	"io"
 	"time"
 
 	"github.com/hirochachacha/go-smb2"
@@ -16,6 +17,9 @@ type Connection struct {
 	SFTP           *sftp.Client
 	SMB            *smb2.Session
 	WinRM          *winrm.Client
+	In             io.WriteCloser
+	Out            io.Reader
+	SSHSesion      *ssh.Session
 	LastConnection time.Time
 	WindowsLetter  string
 	WindowsPath    string

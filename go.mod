@@ -6,6 +6,7 @@ require (
 	github.com/go-pg/pg/v10 v10.6.2
 	github.com/google/uuid v1.1.2
 	github.com/gorilla/mux v1.8.0
+	github.com/gorilla/websocket v1.4.2
 	github.com/hirochachacha/go-smb2 v1.0.2
 	github.com/masterzen/winrm v0.0.0-20200910070334-9a59535f8f2a
 	github.com/mervick/aes-everywhere/go/aes256 v0.0.0-20200907200845-eff87648c75f
