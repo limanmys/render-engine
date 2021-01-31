@@ -2,12 +2,14 @@ package web
 
 import (
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
 	"path/filepath"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -263,8 +265,8 @@ func runScriptHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 var upgrader = websocket.Upgrader{
-	ReadBufferSize:  8096,
-	WriteBufferSize: 8096,
+	ReadBufferSize:  4096,
+	WriteBufferSize: 4096,
 }
 
 func terminalHandler(w http.ResponseWriter, r *http.Request) {
@@ -324,38 +326,69 @@ func terminalHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	socketReader(ws, val.In, val.Out)
+	socket := SocketConnection{
+		conn: ws,
+	}
+	socketReader(&socket, val.In, val.Out)
 	return
 }
 
-func socketReader(conn *websocket.Conn, in io.WriteCloser, out io.Reader) {
+//SocketConnection SocketConnection
+type SocketConnection struct {
+	conn *websocket.Conn
+	sync.Mutex
+}
+
+func (socket *SocketConnection) read() (messageType int, p []byte, err error) {
+	return socket.conn.ReadMessage()
+}
+
+func (socket *SocketConnection) write(data []byte, messageType int) error {
+	socket.Lock()
+	defer socket.Unlock()
+	return socket.conn.WriteMessage(messageType, data)
+}
+
+func socketReader(socket *SocketConnection, sshw io.WriteCloser, sshr io.Reader) {
+	go pingPong(socket)
+
+	go func() {
+		for {
+			data := make([]byte, 4096)
+			_, _ = sshr.Read(data)
+			if err := socket.write(data, 2); err != nil {
+				socket.conn.Close()
+				return
+			}
+		}
+	}()
+
+	type Message struct {
+		Type int
+		Data string
+	}
+
 	for {
-		go socketReadLoop(conn, out)
-		_, p, err := conn.ReadMessage()
-		_, err = in.Write(p)
+		_, p, err := socket.read()
+		res := Message{}
+		json.Unmarshal(p, &res)
+		log.Println(res.Data)
+		_, err = sshw.Write(p)
 		if err != nil {
-			log.Println(err)
 			return
 		}
 	}
 }
 
-func socketReadLoop(conn *websocket.Conn, out io.Reader) {
+func pingPong(socket *SocketConnection) {
 	for {
-		data := make([]byte, 1024)
+		err := socket.write([]byte("ping"), 1)
 
-		receivedSize, _ := out.Read(data)
-		if receivedSize != 1 {
-			fmt.Println("BEKLE")
-			time.Sleep(time.Second * 2)
-		} else {
-			fmt.Println("DEVAM")
-		}
-		fmt.Println(strconv.Itoa(receivedSize))
-
-		if err := conn.WriteMessage(2, data); err != nil {
-			log.Println(err)
+		if err != nil {
+			socket.conn.Close()
 			return
 		}
+
+		time.Sleep(time.Second * 15)
 	}
 }
