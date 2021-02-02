@@ -52,6 +52,15 @@ func (val *Connection) CreateShell(userID string, serverID string, IPAddress str
 		val.WindowsPath = strings.TrimSpace(val.Run("echo $env:TEMP")) + "\\"
 		val.WindowsLetter = val.WindowsPath[0:1]
 		val.WindowsPath = val.WindowsPath[3:]
+	} else if keyObject.Type == "winrm_insecure" {
+		connection, err := InitInsecureWinRMShell(username, password, IPAddress, keyPort)
+		if err != nil {
+			return false
+		}
+		val.WinRM = connection
+		val.WindowsPath = strings.TrimSpace(val.Run("echo $env:TEMP")) + "\\"
+		val.WindowsLetter = val.WindowsPath[0:1]
+		val.WindowsPath = val.WindowsPath[3:]
 	} else {
 		return false
 	}
@@ -72,6 +81,15 @@ func (val *Connection) CreateFileConnection(userID string, serverID string, IPAd
 		}
 		val.SFTP = OpenSFTPConnection(val.SSH)
 	} else if keyObject.Type == "winrm" {
+		if val.SMB != nil {
+			return true
+		}
+		temp, err := OpenSMBConnection(IPAddress, username, password)
+		if err != nil {
+			return false
+		}
+		val.SMB = temp
+	} else if keyObject.Type == "winrm_insecure" {
 		if val.SMB != nil {
 			return true
 		}
@@ -102,6 +120,12 @@ func (val *Connection) CreateShellRaw(connectionType string, username string, pa
 		val.SSH = connection
 	} else if connectionType == "winrm" {
 		connection, err := InitWinRMShell(username, password, IPAddress, keyPort)
+		if err != nil {
+			return false
+		}
+		val.WinRM = connection
+	} else if connectionType == "winrm_insecure" {
+		connection, err := InitInsecureWinRMShell(username, password, IPAddress, keyPort)
 		if err != nil {
 			return false
 		}
@@ -161,6 +185,8 @@ func VerifyAuth(username string, password string, ipAddress string, port string,
 		return VerifySSHCertificate(username, password, ipAddress, port)
 	} else if keyType == "winrm" {
 		return VerifyWinRM(username, password, ipAddress, port)
+	} else if keyType == "winrm_insecure" {
+		return VerifyInsecureWinRM(username, password, ipAddress, port)
 	}
 	return true
 }

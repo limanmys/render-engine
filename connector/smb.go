@@ -4,13 +4,15 @@ import (
 	"io"
 	"net"
 	"os"
+	"time"
 
 	"github.com/hirochachacha/go-smb2"
 )
 
 //OpenSMBConnection OpenSMBConnection
 func OpenSMBConnection(ipAddress string, username string, password string) (*smb2.Session, error) {
-	conn, err := net.Dial("tcp", ipAddress+":445")
+	dialer := net.Dialer{Timeout: time.Second * 5}
+	conn, err := dialer.Dial("tcp", ipAddress+":445")
 	if err != nil {
 		return nil, err
 	}
