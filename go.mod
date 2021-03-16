@@ -3,7 +3,7 @@ module github.com/limanmys/go
 go 1.15
 
 require (
-	github.com/alessio/shellescape v1.4.1 // indirect
+	github.com/alessio/shellescape v1.4.1
 	github.com/go-pg/pg/v10 v10.6.2
 	github.com/google/uuid v1.1.2
 	github.com/gorilla/mux v1.8.0
