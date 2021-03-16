@@ -12,6 +12,8 @@ import (
 	"github.com/limanmys/go/postgresql"
 
 	"github.com/mervick/aes-everywhere/go/aes256"
+
+	"github.com/alessio/shellescape"
 )
 
 // GeneratePHPCommand generate command
@@ -19,6 +21,12 @@ func GeneratePHPCommand(targetFunction string, userID string, extensionID string
 	result := make(map[string]string)
 	combinerPath := "/liman/sandbox/php/index.php"
 	server, extension, settings := postgresql.GetUserData(serverID, extensionID, userID)
+	extension.Name = shellescape.StripUnsafe(extension.Name)
+
+	if !helpers.IsLetter(extension.Name) {
+		return "", errors.New("Eklenti isminde yalnızca harflere izin verilmektedir.")
+	}
+
 	user := postgresql.GetUser(userID)
 	clientUsername, clientPassword, _, serverKey := postgresql.GetServerKey(userID, serverID)
 
@@ -99,7 +107,7 @@ func GeneratePHPCommand(targetFunction string, userID string, extensionID string
 	soPath := "/liman/extensions/" + strings.ToLower(extension.Name) + "/liman.so"
 	soCommand := ""
 	if _, err := os.Stat(soPath); err == nil {
-		soCommand = "-dextension=" + soPath + " "
+		soCommand = "-dextension=" + shellescape.Quote(soPath) + " "
 	}
 
 	keyPath := "/liman/keys/" + extension.ID

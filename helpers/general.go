@@ -7,7 +7,17 @@ import (
 	"os/exec"
 	"strconv"
 	"strings"
+	"unicode"
 )
+
+func IsLetter(s string) bool {
+	for _, r := range s {
+		if !unicode.IsLetter(r) {
+			return false
+		}
+	}
+	return true
+}
 
 // ExecuteCommand : Execute Shell Command
 func ExecuteCommand(input string) (string, error) {
