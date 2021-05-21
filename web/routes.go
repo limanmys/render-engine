@@ -1,10 +1,14 @@
 package web
 
 import (
-	"github.com/gorilla/mux"
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
+
+	"github.com/gorilla/mux"
+	"github.com/limanmys/go/connector"
+	tusd "github.com/tus/tusd/pkg/handler"
 )
 
 // CreateWebServer Create Web Server
@@ -25,6 +29,27 @@ func CreateWebServer() {
 	r.HandleFunc("/openTunnel", openTunnelHandler)
 	r.HandleFunc("/keepTunnelAlive", keepTunnelAliveHandler)
 	r.HandleFunc("/verify", verifyHandler)
+
+	sftpstore := connector.SftpStore{}
+	composer := tusd.NewStoreComposer()
+	sftpstore.UseIn(composer)
+	tusdHandler, err := tusd.NewHandler(tusd.Config{
+		BasePath:              "/sftpUpload/",
+		StoreComposer:         composer,
+		NotifyCompleteUploads: true,
+	})
+	if err != nil {
+		panic(fmt.Errorf("unable to create tusd handler: %s", err))
+	}
+
+	go func() {
+		for {
+			event := <-tusdHandler.CompleteUploads
+			fmt.Printf("Upload %s finished\n", event.Upload.ID)
+		}
+	}()
+
+	r.PathPrefix("/sftpUpload/").Handler(http.StripPrefix("/sftpUpload/", tusdHandler))
 
 	r.Use(loggingMiddleware)
 	r.Use(permissionsMiddleware)
