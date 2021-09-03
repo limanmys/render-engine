@@ -5,7 +5,6 @@ import (
 	"encoding/base64"
 	"errors"
 	"io"
-	"regexp"
 	"strings"
 	"time"
 
@@ -166,21 +165,21 @@ func (val Connection) Run(command string) string {
 		}
 		go func(in io.Writer, output *bytes.Buffer) {
 			for {
-				if strings.Contains(output.String(), "[sudo] password for ") {
-					_, err = in.Write([]byte(val.Password + "\n"))
-					if err != nil {
+				if output.Len() > 0 {
+					if strings.HasPrefix(output.String(), "liman-pass-sudo") {
+						_, err = in.Write([]byte(val.Password + "\n"))
+						if err != nil {
+							break
+						}
+						break
+					} else {
 						break
 					}
-					break
 				}
 			}
 		}(in, stdoutB)
 		sess.Run("(" + command + ") 2> /dev/null")
-		finalOutput := stdoutB.String()
-		re := regexp.MustCompile(`\[sudo\][^:]*:`)
-		finalOutput = re.ReplaceAllString(finalOutput, "")
-		finalOutput = strings.TrimSpace(finalOutput)
-		return finalOutput
+		return strings.TrimSpace(strings.Replace(stdoutB.String(), "liman-pass-sudo", "", 1))
 	} else if val.WinRM != nil {
 		command = "$ProgressPreference = 'SilentlyContinue';" + command
 		encoder := unicode.UTF16(unicode.LittleEndian, unicode.IgnoreBOM).NewEncoder()
