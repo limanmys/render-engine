@@ -1,14 +1,19 @@
 package connector
 
 import (
+	"bytes"
 	"encoding/base64"
 	"errors"
+	"io"
+	"regexp"
 	"strings"
 	"time"
 
 	"github.com/limanmys/go/postgresql"
 
 	"golang.org/x/text/encoding/unicode"
+
+	"golang.org/x/crypto/ssh"
 )
 
 //GetConnection GetConnection
@@ -31,6 +36,7 @@ func GetConnection(userID string, serverID string, IPAddress string) (*Connectio
 //CreateShell CreateShell
 func (val *Connection) CreateShell(userID string, serverID string, IPAddress string) bool {
 	username, password, keyPort, keyObject := postgresql.GetServerKey(userID, serverID)
+	val.Password = password
 	if keyObject.Type == "ssh" {
 		connection, err := InitShellWithPassword(username, password, IPAddress, keyPort)
 		if err != nil {
@@ -70,6 +76,7 @@ func (val *Connection) CreateShell(userID string, serverID string, IPAddress str
 //CreateFileConnection CreateFileConnection
 func (val *Connection) CreateFileConnection(userID string, serverID string, IPAddress string) bool {
 	username, password, _, keyObject := postgresql.GetServerKey(userID, serverID)
+	val.Password = password
 	if keyObject.Type == "ssh" || keyObject.Type == "ssh_certificate" {
 		if val.SFTP != nil {
 			return true
@@ -106,6 +113,7 @@ func (val *Connection) CreateFileConnection(userID string, serverID string, IPAd
 
 //CreateShellRaw CreateShellRaw
 func (val *Connection) CreateShellRaw(connectionType string, username string, password string, IPAddress string, keyPort string) bool {
+	val.Password = password
 	if connectionType == "ssh" {
 		connection, err := InitShellWithPassword(username, password, IPAddress, keyPort)
 		if err != nil {
@@ -141,8 +149,38 @@ func (val Connection) Run(command string) string {
 	if val.SSH != nil {
 		sess, _ := val.SSH.NewSession()
 		defer sess.Close()
-		output, _ := sess.Output(command)
-		return strings.TrimSpace(string(output))
+		modes := ssh.TerminalModes{
+			ssh.ECHO:          0,     // disable echoing
+			ssh.TTY_OP_ISPEED: 14400, // input speed = 14.4kbaud
+			ssh.TTY_OP_OSPEED: 14400, // output speed = 14.4kbaud
+		}
+		err := sess.RequestPty("linux", 1000, 1000, modes)
+		if err != nil {
+			return err.Error()
+		}
+		stdoutB := new(bytes.Buffer)
+		sess.Stdout = stdoutB
+		in, err := sess.StdinPipe()
+		if err != nil {
+			return err.Error()
+		}
+		go func(in io.Writer, output *bytes.Buffer) {
+			for {
+				if strings.Contains(output.String(), "[sudo] password for ") {
+					_, err = in.Write([]byte(val.Password + "\n"))
+					if err != nil {
+						break
+					}
+					break
+				}
+			}
+		}(in, stdoutB)
+		sess.Run("(" + command + ") 2> /dev/null")
+		finalOutput := stdoutB.String()
+		re := regexp.MustCompile(`\[sudo\][^:]*:`)
+		finalOutput = re.ReplaceAllString(finalOutput, "")
+		finalOutput = strings.TrimSpace(finalOutput)
+		return finalOutput
 	} else if val.WinRM != nil {
 		command = "$ProgressPreference = 'SilentlyContinue';" + command
 		encoder := unicode.UTF16(unicode.LittleEndian, unicode.IgnoreBOM).NewEncoder()

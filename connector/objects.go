@@ -13,12 +13,14 @@ import (
 //Connection Connection Struct
 type Connection struct {
 	SSH            *ssh.Client
+	SSHSession     *ssh.Client
 	SFTP           *sftp.Client
 	SMB            *smb2.Session
 	WinRM          *winrm.Client
 	LastConnection time.Time
 	WindowsLetter  string
 	WindowsPath    string
+	Password       string
 }
 
 //ActiveConnections Active Connections
