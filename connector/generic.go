@@ -12,6 +12,8 @@ import (
 
 	"golang.org/x/text/encoding/unicode"
 
+	"github.com/acarl005/stripansi"
+
 	"golang.org/x/crypto/ssh"
 )
 
@@ -153,7 +155,7 @@ func (val Connection) Run(command string) string {
 			ssh.TTY_OP_ISPEED: 14400, // input speed = 14.4kbaud
 			ssh.TTY_OP_OSPEED: 14400, // output speed = 14.4kbaud
 		}
-		err := sess.RequestPty("linux", 1000, 1000, modes)
+		err := sess.RequestPty("dumb", 1000, 1000, modes)
 		if err != nil {
 			return err.Error()
 		}
@@ -179,7 +181,7 @@ func (val Connection) Run(command string) string {
 			}
 		}(in, stdoutB)
 		sess.Run("(" + command + ") 2> /dev/null")
-		return strings.TrimSpace(strings.Replace(stdoutB.String(), "liman-pass-sudo", "", 1))
+		return stripansi.Strip(strings.TrimSpace(strings.Replace(stdoutB.String(), "liman-pass-sudo", "", 1)))
 	} else if val.WinRM != nil {
 		command = "$ProgressPreference = 'SilentlyContinue';" + command
 		encoder := unicode.UTF16(unicode.LittleEndian, unicode.IgnoreBOM).NewEncoder()
