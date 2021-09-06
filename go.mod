@@ -3,7 +3,7 @@ module github.com/limanmys/go
 go 1.15
 
 require (
-	github.com/acarl005/stripansi v0.0.0-20180116102854-5a71ef0e047d // indirect
+	github.com/acarl005/stripansi v0.0.0-20180116102854-5a71ef0e047d
 	github.com/alessio/shellescape v1.4.1
 	github.com/go-pg/pg/v10 v10.6.2
 	github.com/google/uuid v1.1.2
