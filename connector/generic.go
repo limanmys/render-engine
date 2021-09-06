@@ -149,7 +149,11 @@ func (val *Connection) CreateShellRaw(connectionType string, username string, pa
 func (val Connection) Run(command string) string {
 	if val.SSH != nil {
 		sess, _ := val.SSH.NewSession()
+		closed := false
 		defer sess.Close()
+		defer func(closed *bool) {
+			*closed = true
+		}(&closed)
 		modes := ssh.TerminalModes{
 			ssh.ECHO:          0,     // disable echoing
 			ssh.TTY_OP_ISPEED: 14400, // input speed = 14.4kbaud
@@ -165,21 +169,21 @@ func (val Connection) Run(command string) string {
 		if err != nil {
 			return err.Error()
 		}
-		go func(in io.Writer, output *bytes.Buffer) {
+		go func(in io.Writer, output *bytes.Buffer, closed *bool) {
 			for {
+				if *closed {
+					break
+				}
 				if output.Len() > 0 {
-					if strings.HasPrefix(output.String(), "liman-pass-sudo") {
-						_, err = in.Write([]byte(val.Password + "\n"))
-						if err != nil {
-							break
-						}
+					if output.String() == "liman-pass-sudo" {
+						_, _ = in.Write([]byte(val.Password + "\n"))
 						break
 					} else {
 						break
 					}
 				}
 			}
-		}(in, stdoutB)
+		}(in, stdoutB, &closed)
 		sess.Run("(" + command + ") 2> /dev/null")
 		return stripansi.Strip(strings.TrimSpace(strings.Replace(stdoutB.String(), "liman-pass-sudo", "", 1)))
 	} else if val.WinRM != nil {
