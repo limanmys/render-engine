@@ -169,21 +169,23 @@ func (val Connection) Run(command string) string {
 		if err != nil {
 			return err.Error()
 		}
-		go func(in io.Writer, output *bytes.Buffer, closed *bool) {
-			for {
-				if *closed {
-					break
-				}
-				if output.Len() > 0 {
-					if output.String() == "liman-pass-sudo" {
-							_, _ = in.Write([]byte(val.password + "\n"))
-						break
-					} else {
+		if strings.Contains(command, "liman-pass-sudo") {
+			go func(in io.Writer, output *bytes.Buffer, closed *bool) {
+				for {
+					if *closed {
 						break
 					}
+					if output != nil && output.Len() > 0 {
+						if output.String() == "liman-pass-sudo" {
+							_, _ = in.Write([]byte(val.password + "\n"))
+							break
+						} else {
+							break
+						}
+					}
 				}
-			}
-		}(in, stdoutB, &closed)
+			}(in, stdoutB, &closed)
+		}
 		sess.Run("(" + command + ") 2> /dev/null")
 		return stripansi.Strip(strings.TrimSpace(strings.Replace(stdoutB.String(), "liman-pass-sudo", "", 1)))
 	} else if val.WinRM != nil {
