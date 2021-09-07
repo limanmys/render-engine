@@ -37,7 +37,7 @@ func GetConnection(userID string, serverID string, IPAddress string) (*Connectio
 //CreateShell CreateShell
 func (val *Connection) CreateShell(userID string, serverID string, IPAddress string) bool {
 	username, password, keyPort, keyObject := postgresql.GetServerKey(userID, serverID)
-	val.Password = password
+	val.password = password
 	if keyObject.Type == "ssh" {
 		connection, err := InitShellWithPassword(username, password, IPAddress, keyPort)
 		if err != nil {
@@ -77,7 +77,7 @@ func (val *Connection) CreateShell(userID string, serverID string, IPAddress str
 //CreateFileConnection CreateFileConnection
 func (val *Connection) CreateFileConnection(userID string, serverID string, IPAddress string) bool {
 	username, password, _, keyObject := postgresql.GetServerKey(userID, serverID)
-	val.Password = password
+	val.password = password
 	if keyObject.Type == "ssh" || keyObject.Type == "ssh_certificate" {
 		if val.SFTP != nil {
 			return true
@@ -114,7 +114,7 @@ func (val *Connection) CreateFileConnection(userID string, serverID string, IPAd
 
 //CreateShellRaw CreateShellRaw
 func (val *Connection) CreateShellRaw(connectionType string, username string, password string, IPAddress string, keyPort string) bool {
-	val.Password = password
+	val.password = password
 	if connectionType == "ssh" {
 		connection, err := InitShellWithPassword(username, password, IPAddress, keyPort)
 		if err != nil {
@@ -176,7 +176,7 @@ func (val Connection) Run(command string) string {
 				}
 				if output.Len() > 0 {
 					if output.String() == "liman-pass-sudo" {
-						_, _ = in.Write([]byte(val.Password + "\n"))
+							_, _ = in.Write([]byte(val.password + "\n"))
 						break
 					} else {
 						break
