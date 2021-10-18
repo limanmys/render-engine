@@ -243,6 +243,7 @@ func extensionLogHandler(w http.ResponseWriter, r *http.Request) {
 		Message: r.FormValue("message"),
 		Title:   r.FormValue("title"),
 		LogID:   r.FormValue("log_id"),
+		Data:   r.FormValue("data"),
 	}
 
 	sandbox.WriteSpecialLog(specialLog)
