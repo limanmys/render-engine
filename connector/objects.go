@@ -6,7 +6,6 @@ import (
 	"github.com/hirochachacha/go-smb2"
 	"github.com/masterzen/winrm"
 	"github.com/pkg/sftp"
-	"github.com/rgzr/sshtun"
 	"golang.org/x/crypto/ssh"
 )
 
@@ -46,7 +45,7 @@ var ActiveTunnels map[string]Tunnel
 
 //Tunnel Tunnel Struct
 type Tunnel struct {
-	Tunnel         *sshtun.SSHTun
+	Tunnel         *tunnel
 	Port           int
 	LastConnection time.Time
 }

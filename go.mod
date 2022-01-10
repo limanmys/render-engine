@@ -13,7 +13,6 @@ require (
 	github.com/mervick/aes-everywhere/go/aes256 v0.0.0-20200907200845-eff87648c75f
 	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
 	github.com/pkg/sftp v1.12.0
-	github.com/rgzr/sshtun v0.0.2
 	golang.org/x/crypto v0.0.0-20201012173705-84dcc777aaee
 	golang.org/x/text v0.3.3
 )
