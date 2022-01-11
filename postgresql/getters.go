@@ -2,7 +2,10 @@ package postgresql
 
 import (
 	"encoding/json"
+	"io/ioutil"
+	"strings"
 
+	"github.com/go-pg/pg/v10"
 	"github.com/limanmys/go/helpers"
 	"github.com/limanmys/go/models"
 	"github.com/mervick/aes-everywhere/go/aes256"
@@ -115,12 +118,37 @@ func getVariablesFromMorphID(morphID string) map[string]string {
 	return permissions
 }
 
-func getSettings(userID string, serverID string) map[string]string {
+func getSettings(userID string, serverID string, extensionName string) map[string]string {
+	extensionJSONFile, err := ioutil.ReadFile("/liman/extensions/" + strings.ToLower(extensionName) + "/db.json")
+	if err != nil {
+		return make(map[string]string)
+	}
+	var jsonMap map[string]interface{}
+	_ = json.Unmarshal(extensionJSONFile, &jsonMap)
+
+	var globalVars []string
+	for _, setting := range jsonMap["database"].([]interface{}) {
+		isGlobal := setting.(map[string]interface{})["global"]
+		if isGlobal != nil && isGlobal.(bool) {
+			globalVars = append(globalVars, setting.(map[string]interface{})["variable"].(string))
+		}
+	}
+
 	var settings []models.SettingsModel
 	results := make(map[string]string)
+
 	decryptionKey := helpers.AppKey + userID + serverID
 	_ = db.Model(&settings).Where("user_id=? AND server_id=?", userID, serverID).ForEach(func(setting models.SettingsModel) error {
 		setting.Value = aes256.Decrypt(setting.Value, decryptionKey)
+		results[setting.Name] = setting.Value
+		return nil
+	})
+
+	_ = db.Model(&settings).Where("name IN (?) AND server_id=?", pg.In(globalVars), serverID).ForEach(func(setting models.SettingsModel) error {
+		if _, ok := results[setting.Name]; ok {
+			return nil
+		}
+		setting.Value = aes256.Decrypt(setting.Value, helpers.AppKey+setting.UserID+serverID)
 		results[setting.Name] = setting.Value
 		return nil
 	})
