@@ -67,7 +67,6 @@ type tunnel struct {
 
 	ctx    context.Context
 	cancel context.CancelFunc
-	wg     sync.WaitGroup
 
 	errHandler func()
 }
@@ -84,21 +83,24 @@ func (t tunnel) String() string {
 	return fmt.Sprintf("%s@%s | %s %s %s", t.user, t.hostAddr, left, mode, right)
 }
 
-func (t tunnel) Start() {
+func (t *tunnel) Start() {
 	ctx, cancel := context.WithCancel(context.Background())
 	t.ctx = ctx
 	t.cancel = cancel
-	t.wg.Add(1)
-	go t.bindTunnel(ctx, &t.wg)
-	t.wg.Wait()
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+	go t.bindTunnel(ctx, &wg)
+	wg.Wait()
 }
 
-func (t tunnel) Stop() {
+func (t *tunnel) Stop() {
 	t.cancel()
 }
 
 func (t tunnel) bindTunnel(ctx context.Context, wg *sync.WaitGroup) {
-	defer wg.Done()
+	wgt := sync.WaitGroup{}
+	wgt.Add(1)
+	defer wgt.Done()
 	for {
 		var once sync.Once // Only print errors once per session
 		func() {
@@ -113,7 +115,7 @@ func (t tunnel) bindTunnel(ctx context.Context, wg *sync.WaitGroup) {
 				once.Do(func() { t.errHandler(); t.log.Printf("(%v) SSH dial error: %v", t, err) })
 				return
 			}
-			wg.Add(1)
+			wgt.Add(1)
 			defer cl.Close()
 
 			// Attempt to bind to the inbound socket.
@@ -143,10 +145,9 @@ func (t tunnel) bindTunnel(ctx context.Context, wg *sync.WaitGroup) {
 			}()
 
 			t.log.Printf("(%v) binded tunnel", t)
+			wg.Done()
 			defer t.log.Printf("(%v) collapsed tunnel", t)
-			wg.Done()
-			wg.Done()
-
+			defer t.errHandler()
 			// Accept all incoming connections.
 			for {
 				cn1, err := ln.Accept()
@@ -154,8 +155,8 @@ func (t tunnel) bindTunnel(ctx context.Context, wg *sync.WaitGroup) {
 					once.Do(func() { t.errHandler(); t.log.Printf("(%v) accept error: %v", t, err) })
 					return
 				}
-				wg.Add(1)
-				go t.dialTunnel(bindCtx, wg, cl, cn1)
+				wgt.Add(1)
+				go t.dialTunnel(bindCtx, &wgt, cl, cn1)
 			}
 		}()
 
