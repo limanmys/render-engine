@@ -118,16 +118,15 @@ func getVariablesFromMorphID(morphID string) map[string]string {
 	return permissions
 }
 
-func getSettings(userID string, serverID string, extensionName string) map[string]string {
-	extensionJSONFile, err := ioutil.ReadFile("/liman/extensions/" + strings.ToLower(extensionName) + "/db.json")
+func getSettings(userID string, serverID string, extensionID string) map[string]string {
+	extensionJSON, err := GetExtensionJSON(extensionID)
+
 	if err != nil {
 		return make(map[string]string)
 	}
-	var jsonMap map[string]interface{}
-	_ = json.Unmarshal(extensionJSONFile, &jsonMap)
 
 	var globalVars []string
-	for _, setting := range jsonMap["database"].([]interface{}) {
+	for _, setting := range extensionJSON["database"].([]interface{}) {
 		isGlobal := setting.(map[string]interface{})["global"]
 		if isGlobal != nil && isGlobal.(bool) {
 			globalVars = append(globalVars, setting.(map[string]interface{})["variable"].(string))
@@ -206,4 +205,19 @@ func GetServerKey(userID string, serverID string) (string, string, string, model
 
 	json.Unmarshal([]byte(object.Data), &key)
 	return aes256.Decrypt(key.ClientUsername, decryptionKey), aes256.Decrypt(key.ClientPassword, decryptionKey), key.KeyPort, *object
+}
+
+//GetExtensionJSON Get extension json file with extension id
+func GetExtensionJSON(extensionID string) (map[string]interface{}, error) {
+	extension := GetExtension(extensionID)
+	extensionJSONFile, err := ioutil.ReadFile("/liman/extensions/" + strings.ToLower(extension.Name) + "/db.json")
+
+	if err != nil {
+		return nil, err
+	}
+
+	var jsonMap map[string]interface{}
+	_ = json.Unmarshal(extensionJSONFile, &jsonMap)
+
+	return jsonMap, nil
 }

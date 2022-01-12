@@ -1,7 +1,6 @@
 package postgresql
 
 import (
-	"log"
 	"time"
 
 	"github.com/google/uuid"
@@ -34,7 +33,6 @@ func SetExtensionDb(value string, target string, serverID string, isGlobal bool,
 	}
 
 	if !found {
-		log.Println("insert")
 		uuid, _ := uuid.NewUUID()
 		setting := &models.SettingsModel{
 			ID:        uuid.String(),

@@ -126,7 +126,7 @@ func openTunnelHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func setExtensionDb(w http.ResponseWriter, r *http.Request) {
-	target := []string{"target", "new_param", "server_id", "user_id", "global", "writable"}
+	target := []string{"target", "new_param", "server_id", "extension_id", "token"}
 	request, err := extractRequestData(target, r)
 
 	if err != nil {
@@ -135,15 +135,38 @@ func setExtensionDb(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writable, _ := strconv.ParseBool(request["writable"])
-	if !writable {
+	extensionJSON, err := postgresql.GetExtensionJSON(request["extension_id"])
+
+	if err != nil {
+		w.WriteHeader(403)
+		_, _ = w.Write([]byte(err.Error()))
+		return
+	}
+
+	isGlobal, isWritable := false, false
+	for _, setting := range extensionJSON["database"].([]interface{}) {
+		if setting.(map[string]interface{})["variable"] != request["target"] {
+			continue
+		}
+
+		global := setting.(map[string]interface{})["global"]
+		writable := setting.(map[string]interface{})["writable"]
+
+		if global != nil && global.(bool) {
+			isGlobal = true
+		}
+
+		if writable != nil && writable.(bool) {
+			isWritable = true
+		}
+	}
+
+	if !isWritable {
 		w.Header().Set("Content-Type", "text/plain")
 		w.WriteHeader(200)
 		_, _ = w.Write([]byte(request["new_param"]))
 		return
 	}
-
-	isGlobal, _ := strconv.ParseBool(request["global"])
 
 	output := postgresql.SetExtensionDb(request["new_param"], request["target"], request["server_id"], isGlobal, request["user_id"])
 
