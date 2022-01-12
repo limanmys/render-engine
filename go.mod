@@ -6,7 +6,7 @@ require (
 	github.com/acarl005/stripansi v0.0.0-20180116102854-5a71ef0e047d
 	github.com/alessio/shellescape v1.4.1
 	github.com/go-pg/pg/v10 v10.6.2
-	github.com/google/uuid v1.1.2
+	github.com/google/uuid v1.3.0
 	github.com/gorilla/mux v1.8.0
 	github.com/hirochachacha/go-smb2 v1.0.2
 	github.com/masterzen/winrm v0.0.0-20200910070334-9a59535f8f2a

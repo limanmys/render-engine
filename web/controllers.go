@@ -125,6 +125,33 @@ func openTunnelHandler(w http.ResponseWriter, r *http.Request) {
 	_, _ = w.Write([]byte(strconv.Itoa(port)))
 }
 
+func setExtensionDb(w http.ResponseWriter, r *http.Request) {
+	target := []string{"target", "new_param", "server_id", "user_id", "global", "writable"}
+	request, err := extractRequestData(target, r)
+
+	if err != nil {
+		w.WriteHeader(403)
+		_, _ = w.Write([]byte(err.Error()))
+		return
+	}
+
+	writable, _ := strconv.ParseBool(request["writable"])
+	if !writable {
+		w.Header().Set("Content-Type", "text/plain")
+		w.WriteHeader(200)
+		_, _ = w.Write([]byte(request["new_param"]))
+		return
+	}
+
+	isGlobal, _ := strconv.ParseBool(request["global"])
+
+	output := postgresql.SetExtensionDb(request["new_param"], request["target"], request["server_id"], isGlobal, request["user_id"])
+
+	w.Header().Set("Content-Type", "text/plain")
+	w.WriteHeader(200)
+	_, _ = w.Write([]byte(output))
+}
+
 func keepTunnelAliveHandler(w http.ResponseWriter, r *http.Request) {
 	target := []string{"remote_host", "remote_port", "username"}
 	request, err := extractRequestData(target, r)
