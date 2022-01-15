@@ -6,6 +6,7 @@ import (
 	"errors"
 	"io"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/limanmys/go/postgresql"
@@ -149,15 +150,11 @@ func (val *Connection) CreateShellRaw(connectionType string, username string, pa
 func (val Connection) Run(command string) string {
 	if val.SSH != nil {
 		sess, _ := val.SSH.NewSession()
-		closed := false
 		defer sess.Close()
-		defer func(closed *bool) {
-			*closed = true
-		}(&closed)
 		modes := ssh.TerminalModes{
-			ssh.ECHO:          0,     // disable echoing
-			ssh.TTY_OP_ISPEED: 14400, // input speed = 14.4kbaud
-			ssh.TTY_OP_OSPEED: 14400, // output speed = 14.4kbaud
+			ssh.ECHO:          0,
+			ssh.TTY_OP_ISPEED: 14400,
+			ssh.TTY_OP_OSPEED: 14400,
 		}
 		err := sess.RequestPty("dumb", 1000, 1000, modes)
 		if err != nil {
@@ -170,21 +167,32 @@ func (val Connection) Run(command string) string {
 			return err.Error()
 		}
 		if strings.Contains(command, "liman-pass-sudo") {
-			go func(in io.Writer, output *bytes.Buffer, closed *bool) {
+			mutex := &sync.Mutex{}
+			endChan := make(chan struct{})
+			defer close(endChan)
+			go func(in io.Writer, output *bytes.Buffer, endChan chan struct{}, mutex *sync.Mutex) {
+			For:
 				for {
-					if *closed {
-						break
-					}
-					if output != nil && output.Len() > 0 {
-						if output.String() == "liman-pass-sudo" {
-							_, _ = in.Write([]byte(val.password + "\n"))
-							break
-						} else {
-							break
+					select {
+					case <-endChan:
+						break For
+					default:
+						mutex.Lock()
+						if output != nil && output.Len() > 0 {
+							msg := string(output.Bytes())
+							if msg == "liman-pass-sudo" {
+								_, _ = in.Write([]byte(val.password + "\n"))
+								mutex.Unlock()
+								break For
+							} else {
+								mutex.Unlock()
+								break For
+							}
 						}
+						mutex.Unlock()
 					}
 				}
-			}(in, stdoutB, &closed)
+			}(in, stdoutB, endChan, mutex)
 		}
 		sess.Run("(" + command + ") 2> /dev/null")
 		return stripansi.Strip(strings.TrimSpace(strings.Replace(stdoutB.String(), "liman-pass-sudo", "", 1)))
