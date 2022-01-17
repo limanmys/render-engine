@@ -146,6 +146,22 @@ func (val *Connection) CreateShellRaw(connectionType string, username string, pa
 	return true
 }
 
+var mutex = &sync.Mutex{}
+
+func checkOutput(in io.Writer, output *bytes.Buffer, val Connection) bool {
+	mutex.Lock()
+	defer mutex.Unlock()
+	if output != nil && output.Len() > 0 {
+		if output.String() == "liman-pass-sudo" {
+			_, _ = in.Write([]byte(val.password + "\n"))
+			return true
+		} else {
+			return true
+		}
+	}
+	return false
+}
+
 //Run Run through ssh
 func (val Connection) Run(command string) string {
 	if val.SSH != nil {
@@ -167,32 +183,22 @@ func (val Connection) Run(command string) string {
 			return err.Error()
 		}
 		if strings.Contains(command, "liman-pass-sudo") {
-			mutex := &sync.Mutex{}
 			endChan := make(chan struct{})
 			defer close(endChan)
-			go func(in io.Writer, output *bytes.Buffer, endChan chan struct{}, mutex *sync.Mutex) {
+			go func(in io.Writer, output *bytes.Buffer, endChan chan struct{}) {
 			For:
 				for {
 					select {
 					case <-endChan:
 						break For
 					default:
-						mutex.Lock()
-						if output != nil && output.Len() > 0 {
-							msg := string(output.Bytes())
-							if msg == "liman-pass-sudo" {
-								_, _ = in.Write([]byte(val.password + "\n"))
-								mutex.Unlock()
-								break For
-							} else {
-								mutex.Unlock()
-								break For
-							}
+						if checkOutput(in, output, val) {
+							break For
 						}
-						mutex.Unlock()
+						time.Sleep(500)
 					}
 				}
-			}(in, stdoutB, endChan, mutex)
+			}(in, stdoutB, endChan)
 		}
 		sess.Run("(" + command + ") 2> /dev/null")
 		return stripansi.Strip(strings.TrimSpace(strings.Replace(stdoutB.String(), "liman-pass-sudo", "", 1)))
