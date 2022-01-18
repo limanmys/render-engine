@@ -165,14 +165,17 @@ func checkOutput(in io.Writer, output *bytes.Buffer, val Connection) bool {
 //Run Run through ssh
 func (val Connection) Run(command string) string {
 	if val.SSH != nil {
-		sess, _ := val.SSH.NewSession()
+		sess, err := val.SSH.NewSession()
+		if err != nil {
+			return err.Error()
+		}
 		defer sess.Close()
 		modes := ssh.TerminalModes{
 			ssh.ECHO:          0,
 			ssh.TTY_OP_ISPEED: 14400,
 			ssh.TTY_OP_OSPEED: 14400,
 		}
-		err := sess.RequestPty("dumb", 1000, 1000, modes)
+		err = sess.RequestPty("dumb", 1000, 1000, modes)
 		if err != nil {
 			return err.Error()
 		}
