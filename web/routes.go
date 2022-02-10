@@ -1,10 +1,11 @@
 package web
 
 import (
-	"github.com/gorilla/mux"
 	"log"
 	"net/http"
 	"strconv"
+
+	"github.com/gorilla/mux"
 )
 
 // CreateWebServer Create Web Server
@@ -25,6 +26,7 @@ func CreateWebServer() {
 	r.HandleFunc("/openTunnel", openTunnelHandler)
 	r.HandleFunc("/keepTunnelAlive", keepTunnelAliveHandler)
 	r.HandleFunc("/verify", verifyHandler)
+	r.HandleFunc("/setExtensionDb", setExtensionDb)
 
 	r.Use(loggingMiddleware)
 	r.Use(permissionsMiddleware)

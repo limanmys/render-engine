@@ -125,6 +125,56 @@ func openTunnelHandler(w http.ResponseWriter, r *http.Request) {
 	_, _ = w.Write([]byte(strconv.Itoa(port)))
 }
 
+func setExtensionDb(w http.ResponseWriter, r *http.Request) {
+	target := []string{"target", "new_param", "server_id", "extension_id", "token"}
+	request, err := extractRequestData(target, r)
+
+	if err != nil {
+		w.WriteHeader(403)
+		_, _ = w.Write([]byte(err.Error()))
+		return
+	}
+
+	extensionJSON, err := postgresql.GetExtensionJSON(request["extension_id"])
+
+	if err != nil {
+		w.WriteHeader(403)
+		_, _ = w.Write([]byte(err.Error()))
+		return
+	}
+
+	isGlobal, isWritable := false, false
+	for _, setting := range extensionJSON["database"].([]interface{}) {
+		if setting.(map[string]interface{})["variable"] != request["target"] {
+			continue
+		}
+
+		global := setting.(map[string]interface{})["global"]
+		writable := setting.(map[string]interface{})["writable"]
+
+		if global != nil && global.(bool) {
+			isGlobal = true
+		}
+
+		if writable != nil && writable.(bool) {
+			isWritable = true
+		}
+	}
+
+	if !isWritable {
+		w.Header().Set("Content-Type", "text/plain")
+		w.WriteHeader(200)
+		_, _ = w.Write([]byte(request["new_param"]))
+		return
+	}
+
+	output := postgresql.SetExtensionDb(request["new_param"], request["target"], request["server_id"], isGlobal, request["user_id"])
+
+	w.Header().Set("Content-Type", "text/plain")
+	w.WriteHeader(200)
+	_, _ = w.Write([]byte(output))
+}
+
 func keepTunnelAliveHandler(w http.ResponseWriter, r *http.Request) {
 	target := []string{"remote_host", "remote_port", "username"}
 	request, err := extractRequestData(target, r)

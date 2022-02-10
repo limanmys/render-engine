@@ -31,7 +31,7 @@ func InitDB() {
 
 // GetUserData opens the database
 func GetUserData(serverID string, extensionID string, userID string) (models.ServerModel, models.ExtensionModel, map[string]string) {
-	return GetServer(serverID), GetExtension(extensionID), getSettings(userID, serverID)
+	return GetServer(serverID), GetExtension(extensionID), getSettings(userID, serverID, extensionID)
 }
 
 // GetUserIDFromToken Find token from token
