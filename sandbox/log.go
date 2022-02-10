@@ -25,6 +25,7 @@ type SpecialLog struct {
 	Message string `json:"message"`
 	Title   string `json:"title"`
 	LogID   string `json:"log_id"`
+	Data    string `json:"data"`
 }
 
 //WriteRegularLog Write Regular Log Object
