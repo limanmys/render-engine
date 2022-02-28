@@ -20,3 +20,6 @@ var DBUsername string
 
 // DBPassword Liman' Database Password
 var DBPassword string
+
+// Extension Timeout Env
+var Timeout string

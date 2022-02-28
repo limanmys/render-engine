@@ -1,11 +1,14 @@
 package helpers
 
-import "fmt"
-
+import (
+	"fmt"
+	"strings"
+)
 // ReadDataFromLiman Retrieve data from liman
 func ReadDataFromLiman() {
 	readAppKey()
 	readPGData()
+	readTimeout()
 }
 
 func readAppKey() {
@@ -15,6 +18,19 @@ func readAppKey() {
 		Abort(err.Error())
 	}
 	AppKey = StringAfter(output, "APP_KEY=")
+}
+
+func readTimeout() {
+	output, err := ExecuteCommand("cat /liman/server/.env | grep EXTENSION_TIMEOUT")
+	if err != nil {
+		Timeout = "30"
+		return
+	}
+	if strings.TrimSpace(output) == "" {
+		Timeout = "30"
+		return
+	}
+	Timeout = StringAfter(output, "EXTENSION_TIMEOUT=")
 }
 
 func readPGData() {
