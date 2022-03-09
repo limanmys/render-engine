@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"net"
+	"strconv"
 	"sync"
 	"time"
 
@@ -28,13 +29,20 @@ func CreateTunnel(remoteHost string, remotePort string, username string, passwor
 		log.Fatal(err)
 		return 0
 	}
+	dial := net.JoinHostPort("127.0.0.1", remotePort)
+	dialType := "tcp"
+	if _, err := strconv.Atoi(remotePort); err != nil {
+		dial = remotePort
+		dialType = "unix"
+	}
 	sshTunnel := &tunnel{
 		auth:          []ssh.AuthMethod{ssh.Password(password)},
 		hostKeys:      ssh.InsecureIgnoreHostKey(),
 		user:          username,
 		mode:          '>',
 		hostAddr:      net.JoinHostPort(remoteHost, "22"),
-		dialAddr:      net.JoinHostPort("127.0.0.1", remotePort),
+		dialAddr:      dial,
+		dialType:      dialType,
 		bindAddr:      net.JoinHostPort("127.0.0.1", fmt.Sprintf("%d", port)),
 		retryInterval: 30 * time.Second,
 		log:           log.Default(),
@@ -60,6 +68,7 @@ type tunnel struct {
 	hostAddr string
 	bindAddr string
 	dialAddr string
+	dialType string
 
 	retryInterval time.Duration
 
@@ -185,9 +194,9 @@ func (t tunnel) dialTunnel(ctx context.Context, wg *sync.WaitGroup, client *ssh.
 	var err error
 	switch t.mode {
 	case '>':
-		cn2, err = client.Dial("tcp", t.dialAddr)
+		cn2, err = client.Dial(t.dialType, t.dialAddr)
 	case '<':
-		cn2, err = net.Dial("tcp", t.dialAddr)
+		cn2, err = net.Dial(t.dialType, t.dialAddr)
 	}
 	if err != nil {
 		t.log.Printf("(%v) dial error: %v", t, err)
