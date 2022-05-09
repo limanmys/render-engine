@@ -14,5 +14,6 @@ type ServerModel struct {
 	Os          string   `json:"os"`
 	Enabled     string   `json:"enabled"`
 	KeyPort     int      `json:"key_port"`
+	SharedKey   int      `json:"shared_key"`
 	tableName   struct{} `pg:"servers"`
 }

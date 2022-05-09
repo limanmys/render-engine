@@ -194,8 +194,17 @@ func GetServerKey(userID string, serverID string) (string, string, string, model
 	db.Model(object).Where("user_id=? AND server_id=?", userID, serverID).First()
 
 	if object.Data == "" {
-		return "", "", "", models.ServerKey{}
+		server := &models.ServerModel{}
+		db.Model(server).Where("id=?", serverID).First()
+
+		if server.SharedKey == 1 {
+			db.Model(object).Where("server_id=?", serverID).First()
+			decryptionKey = helpers.AppKey + object.UserID + serverID
+		} else {
+			return "", "", "", models.ServerKey{}
+		}
 	}
+
 	type keyData struct {
 		ClientUsername string `json:"clientUsername"`
 		ClientPassword string `json:"clientPassword"`
