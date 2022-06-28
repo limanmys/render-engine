@@ -2,6 +2,7 @@ package connector
 
 import (
 	"net"
+	"time"
 
 	"golang.org/x/crypto/ssh"
 )
@@ -14,6 +15,7 @@ func InitShellWithPassword(username string, password string, hostname string, po
 			ssh.Password(password),
 		},
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+		Timeout:         time.Second * 10,
 	}
 	ipAddress := hostname
 	for i := 0; i < 5; i++ {
@@ -44,6 +46,7 @@ func InitShellWithCertificate(username string, certificate string, hostname stri
 			ssh.PublicKeys(key),
 		},
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+		Timeout:         time.Second * 10,
 	}
 	conn, err := ssh.Dial("tcp", hostname+":"+port, config)
 	if err != nil {
@@ -61,6 +64,7 @@ func VerifySSH(username string, password string, ipAddress string, port string) 
 			ssh.Password(password),
 		},
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+		Timeout:         time.Second * 10,
 	}
 	conn, err := ssh.Dial("tcp", ipAddress+":"+port, config)
 
@@ -74,17 +78,24 @@ func VerifySSH(username string, password string, ipAddress string, port string) 
 //VerifySSHCertificate VerifySSHCertificate
 func VerifySSHCertificate(username string, certificate string, ipAddress string, port string) bool {
 	key, err := ssh.ParsePrivateKey([]byte(certificate))
+	if err != nil {
+		return false
+	}
+
 	config := &ssh.ClientConfig{
 		User: username,
 		Auth: []ssh.AuthMethod{
 			ssh.PublicKeys(key),
 		},
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+		Timeout:         time.Second * 10,
 	}
+
 	conn, err := ssh.Dial("tcp", ipAddress+":"+port, config)
-	defer conn.Close()
 	if err != nil {
 		return false
 	}
+	defer conn.Close()
+
 	return true
 }
