@@ -39,8 +39,6 @@ func GetConnection(userID string, serverID string, IPAddress string) (*Connectio
 func (val *Connection) CreateShell(userID string, serverID string, IPAddress string) bool {
 	username, password, keyPort, keyObject := postgresql.GetServerKey(userID, serverID)
 	val.password = password
-	val.IpAddr = IPAddress
-	val.Port = keyPort
 	if keyObject.Type == "ssh" {
 		connection, err := InitShellWithPassword(username, password, IPAddress, keyPort)
 		if err != nil {
@@ -79,10 +77,8 @@ func (val *Connection) CreateShell(userID string, serverID string, IPAddress str
 
 //CreateFileConnection CreateFileConnection
 func (val *Connection) CreateFileConnection(userID string, serverID string, IPAddress string) bool {
-	username, password, keyPort, keyObject := postgresql.GetServerKey(userID, serverID)
+	username, password, _, keyObject := postgresql.GetServerKey(userID, serverID)
 	val.password = password
-	val.IpAddr = IPAddress
-	val.Port = keyPort
 	if keyObject.Type == "ssh" || keyObject.Type == "ssh_certificate" {
 		if val.SFTP != nil {
 			return true
@@ -120,8 +116,6 @@ func (val *Connection) CreateFileConnection(userID string, serverID string, IPAd
 //CreateShellRaw CreateShellRaw
 func (val *Connection) CreateShellRaw(connectionType string, username string, password string, IPAddress string, keyPort string) bool {
 	val.password = password
-	val.IpAddr = IPAddress
-	val.Port = keyPort
 	if connectionType == "ssh" {
 		connection, err := InitShellWithPassword(username, password, IPAddress, keyPort)
 		if err != nil {
