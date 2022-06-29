@@ -2,7 +2,6 @@ package web
 
 import (
 	"encoding/base64"
-	"net"
 	"net/http"
 	"path/filepath"
 	"strconv"
@@ -24,7 +23,7 @@ func putFileHandler(w http.ResponseWriter, r *http.Request) {
 
 	server := postgresql.GetServer(request["server_id"])
 
-	val, _ := connector.GetConnection(request["user_id"], request["server_id"], server.IPAddress, server.ControlPort)
+	val, err := connector.GetConnection(request["user_id"], request["server_id"], server.IPAddress)
 
 	val.CreateFileConnection(request["user_id"], request["server_id"], server.IPAddress)
 
@@ -39,7 +38,7 @@ func putFileHandler(w http.ResponseWriter, r *http.Request) {
 	flag := val.Put(request["local_path"], remotePath)
 
 	w.Header().Set("Content-Type", "text/plain")
-	if flag {
+	if flag == true {
 		w.WriteHeader(200)
 		_, _ = w.Write([]byte("ok"))
 	} else {
@@ -61,7 +60,7 @@ func getFileHandler(w http.ResponseWriter, r *http.Request) {
 
 	server := postgresql.GetServer(request["server_id"])
 
-	val, _ := connector.GetConnection(request["user_id"], request["server_id"], server.IPAddress, server.ControlPort)
+	val, err := connector.GetConnection(request["user_id"], request["server_id"], server.IPAddress)
 
 	val.CreateFileConnection(request["user_id"], request["server_id"], server.IPAddress)
 
@@ -97,7 +96,7 @@ func runCommandHandler(w http.ResponseWriter, r *http.Request) {
 
 	server := postgresql.GetServer(request["server_id"])
 
-	val, err := connector.GetConnection(request["user_id"], request["server_id"], server.IPAddress, server.ControlPort)
+	val, err := connector.GetConnection(request["user_id"], request["server_id"], server.IPAddress)
 
 	if err != nil {
 		w.WriteHeader(403)
@@ -209,19 +208,10 @@ func runOutsideCommandHandler(w http.ResponseWriter, r *http.Request) {
 
 	var val connector.Connection
 	if val2, ok := connector.ActiveConnections[request["user_id"]+request["remote_host"]+request["username"]]; ok {
-		addr := net.JoinHostPort(request["remote_host"], request["remote_port"])
-		_, err := net.DialTimeout("tcp", addr, 10*time.Second)
-		if err != nil {
-			connector.CloseAllConnections(connector.ActiveConnections[request["user_id"]+request["remote_host"]+request["username"]])
-			delete(connector.ActiveConnections, request["user_id"]+request["remote_host"]+request["username"])
-			w.WriteHeader(403)
-			_, _ = w.Write([]byte("Cannot create connection"))
-			return
-		}
 		val = val2
 	} else {
 		res := val.CreateShellRaw(request["connection_type"], request["username"], request["password"], request["remote_host"], request["remote_port"])
-		if !res {
+		if res == false {
 			w.WriteHeader(403)
 			_, _ = w.Write([]byte("Cannot create connection"))
 			return
@@ -269,7 +259,7 @@ func runScriptHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	server := postgresql.GetServer(request["server_id"])
 
-	val, err := connector.GetConnection(request["user_id"], request["server_id"], server.IPAddress, server.ControlPort)
+	val, err := connector.GetConnection(request["user_id"], request["server_id"], server.IPAddress)
 
 	if err != nil {
 		w.WriteHeader(403)
