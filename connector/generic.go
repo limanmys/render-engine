@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"io"
+	"net"
 	"strings"
 	"sync"
 	"time"
@@ -19,13 +20,20 @@ import (
 )
 
 //GetConnection GetConnection
-func GetConnection(userID string, serverID string, IPAddress string) (*Connection, error) {
+func GetConnection(userID string, serverID string, IPAddress string, Port string) (*Connection, error) {
 	var val Connection
 	if val2, ok := ActiveConnections[userID+serverID]; ok {
+		addr := net.JoinHostPort(IPAddress, Port)
+		_, err := net.DialTimeout("tcp", addr, 10*time.Second)
+		if err != nil {
+			CloseAllConnections(ActiveConnections[userID+serverID])
+			delete(ActiveConnections, userID+serverID)
+			return &val, errors.New("cannot connect to server")
+		}
 		val = val2
 	} else {
 		res := val.CreateShell(userID, serverID, IPAddress)
-		if res == false {
+		if !res {
 			return &val, errors.New("cannot connect to server")
 		}
 	}
