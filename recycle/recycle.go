@@ -1,6 +1,7 @@
 package recycle
 
 import (
+	"net"
 	"time"
 
 	"github.com/limanmys/go/connector"
@@ -16,7 +17,8 @@ func Start() {
 		}
 
 		if data.SSH != nil {
-			_, _, err := data.SSH.SendRequest("keepalive@liman.dev", true, nil)
+			addr := net.JoinHostPort(data.IpAddr, data.Port)
+			_, err := net.DialTimeout("tcp", addr, 10*time.Second)
 			if err != nil {
 				connector.CloseAllConnections(connector.ActiveConnections[key])
 				delete(connector.ActiveConnections, key)

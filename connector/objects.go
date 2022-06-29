@@ -19,6 +19,8 @@ type Connection struct {
 	LastConnection time.Time
 	WindowsLetter  string
 	WindowsPath    string
+	IpAddr         string
+	Port           string
 	password       string
 }
 
