@@ -1,6 +1,7 @@
 package recycle
 
 import (
+	"net"
 	"sync"
 	"time"
 
@@ -18,9 +19,22 @@ func Start() {
 			connector.CloseAllConnections(connector.ActiveConnections[key])
 			delete(connector.ActiveConnections, key)
 			mut.Unlock()
+			continue
 		}
 
 		if data.SSH != nil {
+			if data.IpAddr != "" && data.Port != "" {
+				addr := net.JoinHostPort(data.IpAddr, data.Port)
+				_, err := net.DialTimeout("tcp", addr, 10*time.Second)
+				if err != nil {
+					mut.Lock()
+					connector.CloseAllConnections(connector.ActiveConnections[key])
+					delete(connector.ActiveConnections, key)
+					mut.Unlock()
+					continue
+				}
+			}
+
 			ch := make(chan int, 1)
 			go func() {
 				select {
