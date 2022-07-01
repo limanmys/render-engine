@@ -18,7 +18,7 @@ func InitShellWithPassword(username string, password string, hostname string, po
 		Timeout:         time.Second * 10,
 	}
 	ipAddress := hostname
-	for i := 0; i < 5; i++ {
+	for i := 0; i < 10; i++ {
 		addr, err := net.LookupIP(hostname)
 		if err == nil {
 			ipAddress = addr[0].String()

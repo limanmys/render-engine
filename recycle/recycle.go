@@ -24,7 +24,16 @@ func Start() {
 
 		if data.SSH != nil {
 			if data.IpAddr != "" && data.Port != "" {
-				addr := net.JoinHostPort(data.IpAddr, data.Port)
+				ipAddress := data.IpAddr
+				for i := 0; i < 10; i++ {
+					addr, err := net.LookupIP(ipAddress)
+					if err == nil {
+						ipAddress = addr[0].String()
+						break
+					}
+				}
+
+				addr := net.JoinHostPort(ipAddress, data.Port)
 				_, err := net.DialTimeout("tcp", addr, 10*time.Second)
 				if err != nil {
 					mut.Lock()
