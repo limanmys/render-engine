@@ -197,7 +197,7 @@ func keepTunnelAliveHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func runOutsideCommandHandler(w http.ResponseWriter, r *http.Request) {
-	target := []string{"command", "connection_type", "remote_host", "remote_port", "username", "password"}
+	target := []string{"command", "connection_type", "remote_host", "remote_port", "username", "password", "disconnect"}
 	request, err := extractRequestData(target, r)
 
 	if err != nil {
@@ -221,6 +221,10 @@ func runOutsideCommandHandler(w http.ResponseWriter, r *http.Request) {
 	val.LastConnection = time.Now()
 	connector.ActiveConnections[request["user_id"]+request["remote_host"]+request["username"]] = val
 	output := val.Run(request["command"])
+	if request["disconnect"] == "1" {
+		connector.CloseAllConnections(connector.ActiveConnections[request["user_id"]+request["remote_host"]+request["username"]])
+		delete(connector.ActiveConnections, request["user_id"]+request["remote_host"]+request["username"])
+	}
 	w.Header().Set("Content-Type", "text/plain")
 	w.WriteHeader(200)
 	_, _ = w.Write([]byte(output))
