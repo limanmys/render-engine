@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/limanmys/go/postgresql"
+	"github.com/limanmys/render-engine/postgresql"
 
 	"golang.org/x/text/encoding/unicode"
 

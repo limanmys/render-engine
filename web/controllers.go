@@ -7,8 +7,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/limanmys/go/connector"
-	"github.com/limanmys/go/postgresql"
+	"github.com/limanmys/render-engine/connector"
+	"github.com/limanmys/render-engine/postgresql"
 )
 
 func putFileHandler(w http.ResponseWriter, r *http.Request) {

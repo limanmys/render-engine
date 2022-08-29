@@ -8,8 +8,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/limanmys/go/helpers"
-	"github.com/limanmys/go/postgresql"
+	"github.com/limanmys/render-engine/helpers"
+	"github.com/limanmys/render-engine/postgresql"
 
 	"github.com/mervick/aes-everywhere/go/aes256"
 

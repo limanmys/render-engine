@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/limanmys/go/connector"
+	"github.com/limanmys/render-engine/connector"
 )
 
 var mut sync.Mutex

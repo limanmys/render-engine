@@ -1,4 +1,4 @@
-module github.com/limanmys/go
+module github.com/limanmys/render-engine
 
 go 1.15
 

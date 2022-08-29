@@ -1,11 +1,11 @@
 package main
 
 import (
-	"github.com/limanmys/go/connector"
-	"github.com/limanmys/go/helpers"
-	"github.com/limanmys/go/postgresql"
-	"github.com/limanmys/go/recycle"
-	"github.com/limanmys/go/web"
+	"github.com/limanmys/render-engine/connector"
+	"github.com/limanmys/render-engine/helpers"
+	"github.com/limanmys/render-engine/postgresql"
+	"github.com/limanmys/render-engine/recycle"
+	"github.com/limanmys/render-engine/web"
 )
 
 func main() {

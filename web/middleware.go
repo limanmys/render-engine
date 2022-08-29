@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/limanmys/go/helpers"
-	"github.com/limanmys/go/postgresql"
+	"github.com/limanmys/render-engine/helpers"
+	"github.com/limanmys/render-engine/postgresql"
 )
 
 func extractRequestData(target []string, r *http.Request) (map[string]string, error) {

@@ -6,8 +6,8 @@ import (
 	"strings"
 
 	"github.com/go-pg/pg/v10"
-	"github.com/limanmys/go/helpers"
-	"github.com/limanmys/go/models"
+	"github.com/limanmys/render-engine/helpers"
+	"github.com/limanmys/render-engine/models"
 	"github.com/mervick/aes-everywhere/go/aes256"
 )
 
